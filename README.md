@@ -166,4 +166,4 @@ See [SECURITY.md](SECURITY.md) for the full security policy, responsible disclos
 
 ## License
 
-MIT License. Copyright 2026 Frxncois. See [LICENSE](LICENSE).
+MIT License. Copyright 2026 DevCraftXCoder. See [LICENSE](LICENSE).
