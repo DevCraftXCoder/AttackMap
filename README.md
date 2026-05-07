@@ -156,6 +156,15 @@ curl http://127.0.0.1:8900/health
 
 ---
 
+## Recent Additions
+
+- **Interactive attack-type filter chips** — Legend chips now filter the live map by attack type (brute-force, probe, exploit, scan) with animated transitions
+- **Live threat map polish** — Contrast improvements, selective pulse animations on active nodes, layered surface styling, collapsible panel layout
+- **AI threat summary** — Claude-powered 24h attack pattern narrative generated from live event data
+- **Admin Discord integration** — Discord webhook buttons for surfacing top attack events to notification channels
+
+---
+
 ## Security
 
 All operations require explicit written authorization from the system owner. AttackMap enforces this at the technical level through scope enforcement, dry-run defaults, and local-only output — but technical controls do not substitute for legal authorization.
