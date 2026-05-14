@@ -14,7 +14,7 @@
 
 **Attack surface mapper and threat intelligence framework for authorized security assessments. Maps exposed services, models threat paths, and produces structured reports via MCP or REST API.**
 
-[Architecture](#architecture) | [Installation](#installation) | [Running](#running) | [Security](#security)
+[Architecture](#architecture) | [Security](#security)
 
 </div>
 
@@ -22,7 +22,7 @@
 
 ## Overview
 
-AttackMap is a local-first threat modeling framework that enumerates and scores attack surface exposure across networks, services, and application layers. It integrates with AI clients (Claude, GPT, Cursor) via the Model Context Protocol (MCP), enabling interactive threat analysis and collaborative security assessment workflows.
+AttackMap is a local-first threat modeling framework that enumerates and scores attack surface exposure across networks, services, and application layers. It integrates with AI clients via the Model Context Protocol (MCP), enabling interactive threat analysis and collaborative security assessment workflows.
 
 All operations are scoped, audited, and designed to run exclusively against authorized targets. No scan results leave the local machine.
 
@@ -31,7 +31,7 @@ All operations are scoped, audited, and designed to run exclusively against auth
 ## Architecture
 
 ```
-AI Client (Claude, GPT, Cursor)
+AI Client
   |
   v  (MCP Protocol)
 AttackMap MCP Server
@@ -87,7 +87,7 @@ Assessment Engine
 - **Threat Path Modeling** — Map realistic attack chains from initial access to lateral movement and impact
 - **MITRE ATT&CK Mapping** — Tag findings against ATT&CK techniques and sub-techniques automatically
 - **Risk Scoring** — CVSS-aligned severity scoring with exploitability and impact modifiers
-- **MCP Integration** — Expose all capabilities to AI clients (Claude, GPT, Cursor) via MCP protocol
+- **MCP Integration** — Expose all capabilities to AI clients via MCP protocol
 - **Structured Reporting** — Generate JSON, Markdown, and SARIF reports for integration with CI/CD pipelines
 - **Zero Telemetry** — All scan results stay on the local filesystem, no external transmission
 - **Scope Enforcement** — Allowlist-based target validation blocks out-of-scope operations before execution
@@ -95,72 +95,11 @@ Assessment Engine
 
 ---
 
-## Installation
-
-### Prerequisites
-
-- Python 3.8 or later
-- pip
-
-### Steps
-
-```bash
-git clone https://github.com/DevCraftXCoder/attack-map.git
-cd attack-map
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env: set API_KEY, ALLOWED_TARGETS, and optional settings
-```
-
----
-
-## Running
-
-### REST API server
-
-```bash
-python server.py
-# Binds to 127.0.0.1:8900
-```
-
-### MCP server (AI client integration)
-
-```bash
-python mcp_server.py
-```
-
-Add to your MCP client config (Claude Desktop, Cursor, etc.):
-
-```json
-{
-  "mcpServers": {
-    "attack-map": {
-      "command": "python",
-      "args": ["/path/to/attack-map/mcp_server.py"],
-      "env": {
-        "API_KEY": "your-key-here",
-        "ALLOWED_TARGETS": "192.168.1.0/24,10.0.0.0/8"
-      }
-    }
-  }
-}
-```
-
-### Health check
-
-```bash
-curl http://127.0.0.1:8900/health
-```
-
----
-
 ## Recent Additions
 
 - **Interactive attack-type filter chips** — Legend chips now filter the live map by attack type (brute-force, probe, exploit, scan) with animated transitions
 - **Live threat map polish** — Contrast improvements, selective pulse animations on active nodes, layered surface styling, collapsible panel layout
-- **AI threat summary** — Claude-powered 24h attack pattern narrative generated from live event data
+- **AI threat summary** — AI-powered 24h attack pattern narrative generated from live event data
 - **Admin Discord integration** — Discord webhook buttons for surfacing top attack events to notification channels
 
 ---
@@ -176,3 +115,7 @@ See [SECURITY.md](SECURITY.md) for the full security policy, responsible disclos
 ## License
 
 MIT License. Copyright 2026 DevCraftXCoder. See [LICENSE](LICENSE).
+
+---
+
+*Built by Frxncois — not open source.*
