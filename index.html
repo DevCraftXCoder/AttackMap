@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AttackMap</title>
+  <script
+    src="https://browser.sentry-cdn.com/7.x/bundle.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    if (window.Sentry) {
+      Sentry.init({
+        dsn: "https://d6d5f779be0eab14b058105ce62f8549@o4511121533894656.ingest.us.sentry.io/4511121535205376",
+        tracesSampleRate: 0.1,
+      });
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
