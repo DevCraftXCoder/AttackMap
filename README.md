@@ -14,12 +14,12 @@
 
 ## Overview
 
-AttackMap enumerates and scores your attack surface across networks, services, and applications — then exposes findings via MCP so AI clients (Claude Code, Cursor, Copilot) can query and reason about them interactively. All scan results stay on your local machine; no data is sent to external services.
+AttackMap enumerates and scores your attack surface across networks, services, and applications — then exposes findings via MCP so automation clients (Claude Code, Cursor, Copilot) can query and reason about them interactively. All scan results stay on your local machine; no data is sent to external services.
 
 ## Architecture
 
 ```
-AI Client (Claude Code / GPT / Cursor)
+Automation Client (Claude Code / GPT / Cursor)
   └── MCP Protocol
         └── AttackMap Server
               └── Attack Surface Engine
@@ -44,7 +44,7 @@ No data leaves your local machine — local-first, zero exfil.
 - **Enumerates** exposed services, open ports, and app-layer attack vectors
 - **Scores** each vector by exploitability + exposure level (0–10 scale)
 - **Produces** structured threat reports in JSON and human-readable format
-- **MCP integration** — AI clients query findings interactively: "What are my highest-risk open ports?" "Which services are running outdated versions?"
+- **MCP integration** — automation clients query findings interactively: "What are my highest-risk open ports?" "Which services are running outdated versions?"
 - **Zero-trust** — all scan results stay on local machine, no exfiltration
 
 ## Key Engineering
@@ -52,5 +52,5 @@ No data leaves your local machine — local-first, zero exfil.
 - **IP allowlist** — admin operations locked to authorized networks; IPv6 prefix matching requires /64 minimum specificity to prevent broad-prefix bypass
 - **Authorized-use-only design** — scan scope validated against explicit target whitelist before execution
 - **Structured output** — findings are machine-readable JSON for downstream tooling + LLM analysis
-- **MCP server mode** — runs as persistent MCP server; AI clients can query findings across a session
+- **MCP server mode** — runs as persistent MCP server; automation clients can query findings across a session
 
