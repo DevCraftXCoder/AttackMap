@@ -51,6 +51,6 @@ No data leaves your local machine — local-first, zero exfil.
 
 - **IP allowlist** — admin operations locked to authorized networks; IPv6 prefix matching requires /64 minimum specificity to prevent broad-prefix bypass
 - **Authorized-use-only design** — scan scope validated against explicit target whitelist before execution
-- **Structured output** — findings are machine-readable JSON for downstream tooling + AI analysis
+- **Structured output** — findings are machine-readable JSON for downstream tooling + LLM analysis
 - **MCP server mode** — runs as persistent MCP server; AI clients can query findings across a session
 
