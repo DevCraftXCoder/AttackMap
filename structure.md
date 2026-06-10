@@ -1,88 +1,19 @@
-# AttackMap — Planned File Structure
+# AttackMap — Technical Overview
 
-This file documents the intended layout once development begins.
-All paths are relative to the repo root.
+AttackMap is a real-time auth-failure geo-dashboard running entirely on Cloudflare's edge. It ingests failed login attempts from an API server, stores them in D1 (Cloudflare's SQLite-at-the-edge database), and renders them as a live geo-visualization with country clustering, a heatmap, and a streaming event feed.
 
-```
-attack-map/
-|
-+-- server.py                   # FastAPI REST API server (127.0.0.1:8900)
-+-- mcp_server.py               # MCP server (stdio transport for AI clients)
-+-- scope_enforcer.py           # Target allowlist validation (runs before every operation)
-+-- requirements.txt            # All Python dependencies, pinned versions
-+-- requirements-core.txt       # Minimal install (API server only, no heavy deps)
-+-- .env.example                # Environment variable template (no real values)
-|
-+-- src/
-|   +-- __init__.py
-|   +-- surface/
-|   |   +-- __init__.py
-|   |   +-- discovery.py        # Service and port enumeration modules
-|   |   +-- scoring.py          # CVSS-aligned risk scoring engine
-|   |   +-- aggregator.py       # Multi-source result aggregation
-|   |
-|   +-- threat/
-|   |   +-- __init__.py
-|   |   +-- modeler.py          # Attack path construction
-|   |   +-- attack_mapper.py    # MITRE ATT&CK technique mapping
-|   |   +-- chain_builder.py    # Attack chain discovery
-|   |
-|   +-- intelligence/
-|   |   +-- __init__.py
-|   |   +-- collector.py        # Threat intelligence aggregation
-|   |   +-- enrichment.py       # IOC and context enrichment
-|   |
-|   +-- reporting/
-|   |   +-- __init__.py
-|   |   +-- json_report.py      # JSON report generator
-|   |   +-- markdown_report.py  # Markdown report generator
-|   |   +-- sarif_report.py     # SARIF report generator (CI/CD integration)
-|   |
-|   +-- api/
-|   |   +-- __init__.py
-|   |   +-- routes/
-|   |       +-- health.py       # GET /health
-|   |       +-- surface.py      # POST /surface/scan, GET /surface/results
-|   |       +-- threats.py      # POST /threats/model, GET /threats/paths
-|   |       +-- reports.py      # POST /reports/generate, GET /reports/{id}
-|   |
-|   +-- mcp/
-|       +-- __init__.py
-|       +-- tools.py            # MCP tool definitions (scan, model, report)
-|       +-- resources.py        # MCP resource definitions (results, findings)
-|
-+-- tests/
-|   +-- __init__.py
-|   +-- test_scope_enforcer.py  # Scope enforcement unit tests
-|   +-- test_scoring.py         # Risk scoring unit tests
-|   +-- test_attack_mapper.py   # ATT&CK mapping unit tests
-|   +-- test_api.py             # API endpoint integration tests
-|
-+-- output/                     # Assessment results (gitignored)
-+-- README.md
-+-- LICENSE
-+-- SECURITY.md
-+-- .gitignore
-+-- structure.md                # This file
-```
+## Data pipeline
 
-## Environment Variables (.env.example)
+Auth failures are written to D1 on every rejected login attempt, carrying the IP address, country code, geo coordinates, route, and failure reason. A Server-Sent Events endpoint streams new rows to connected dashboards in real time. Geo coordinates that arrive without location data are resolved asynchronously via a Zippopotam + U.S. Census fallback chain, with results cached in Workers KV to avoid repeat lookups.
 
-```
-# Required
-API_KEY=changeme-generate-a-strong-random-key
+## Dashboard surfaces
 
-# Target scope (comma-separated CIDRs or exact IPs)
-ALLOWED_TARGETS=192.168.1.0/24
+The dashboard offers multiple views: a Leaflet map with country-level clustering, a Cobe 3-D globe, a time-series chart, and a tabular list. A heatmap view shows attack frequency by day-of-week and hour. Per-IP deep-probe enrichment pulls AbuseIPDB reputation data and reverse-lookup results on demand. Admins can block individual IPs or entire countries with optional expiry; blocks are written to D1 and enforced by Worker middleware on every request.
 
-# Server
-HOST=127.0.0.1
-PORT=8900
+## Sharing and export
 
-# Assessment defaults
-DRY_RUN=true
-SCAN_TIMEOUT_SECONDS=300
+A share-token endpoint lets admins generate a time-limited public link that exposes aggregate statistics (total event count, top countries, top targeted routes) without revealing raw IPs or individual events. A separate export endpoint delivers up to 10,000 rows as CSV or JSON. Workers AI generates a plain-language threat-intelligence summary from recent failures, cached for five minutes to avoid re-running the model on every page load.
 
-# Optional: IP allowlist for admin operations (comma-separated CIDRs)
-ADMIN_IP_ALLOWLIST=192.168.1.0/24
-```
+## Stack
+
+Cloudflare Workers · D1 · Hono · TypeScript · Next.js 15 · Leaflet · Cobe · Workers AI · AbuseIPDB · Server-Sent Events

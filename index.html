@@ -3,21 +3,329 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AttackMap</title>
-  <script
-    src="https://browser.sentry-cdn.com/7.x/bundle.min.js"
-    crossorigin="anonymous"
-  ></script>
-  <script>
-    if (window.Sentry) {
-      Sentry.init({
-        dsn: "https://d6d5f779be0eab14b058105ce62f8549@o4511121533894656.ingest.us.sentry.io/4511121535205376",
-        tracesSampleRate: 0.1,
-      });
+  <title>AttackMap — Auth-Failure Geo-Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #0f172a;
+      --border: #1e293b;
+      --accent: #e94560;
+      --accent-dim: rgba(233, 69, 96, 0.12);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
     }
-  </script>
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 64px 24px 96px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 56px;
+    }
+    .hero-bar {
+      width: 4px;
+      height: 72px;
+      background: var(--accent);
+      border-radius: 2px;
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .hero-title {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .hero-desc {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 560px;
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 48px; }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Feature grid ── */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 580px) { .features { grid-template-columns: 1fr; } }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .feature-icon {
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .feature-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ── Tech stack ── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      background: var(--accent-dim);
+      border: 1px solid rgba(233, 69, 96, 0.25);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      font-family: var(--mono);
+      letter-spacing: 0.02em;
+    }
+    .tag-neutral {
+      background: rgba(148, 163, 184, 0.06);
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ── Stat row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .stat-num {
+      display: block;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div class="wrap">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-bar"></div>
+      <div>
+        <p class="hero-eyebrow">Security Intelligence</p>
+        <h1 class="hero-title">AttackMap</h1>
+        <p class="hero-desc">
+          Real-time auth-failure geo-dashboard built on Cloudflare Workers.
+          Visualizes login attack patterns, scores anomalies, and enables
+          instant IP and geo blocking — all from the edge.
+        </p>
+      </div>
+    </div>
+
+    <!-- At-a-glance stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num">Edge</span>
+        <span class="stat-label">Zero cold starts</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">D1</span>
+        <span class="stat-label">SQLite at the edge</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">Live</span>
+        <span class="stat-label">Streaming event feed</span>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="section">
+      <p class="section-label">Features</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🗺️</div>
+          <div class="feature-title">Geo visualization</div>
+          <div class="feature-body">
+            Auth failures plotted on a Leaflet map and a Cobe globe with country-level clustering and heat bands.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Streaming event feed</div>
+          <div class="feature-body">
+            Server-Sent Events pipeline delivers new failures in real time. Anomaly scoring fires inline on ingestion.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🚫</div>
+          <div class="feature-title">IP &amp; geo blocking</div>
+          <div class="feature-body">
+            One-click IP block or country-level geo block with optional expiry. Blocks enforced at the Worker edge.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔬</div>
+          <div class="feature-title">Deep IP probe</div>
+          <div class="feature-body">
+            AbuseIPDB enrichment + reverse-lookup for any suspicious IP, surfaced directly in the dashboard.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Heatmap &amp; analytics</div>
+          <div class="feature-body">
+            Attack frequency heatmap by day-of-week and hour. Per-route breakdown, failure reason distribution.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">Shareable snapshots</div>
+          <div class="feature-body">
+            Generate a time-limited public share link exposing aggregate stats — no raw IPs, no admin access required.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI threat summary</div>
+          <div class="feature-body">
+            Workers AI generates a plain-language threat-intel report from recent failures, cached for 5 minutes.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🗃️</div>
+          <div class="feature-title">Export &amp; backfill</div>
+          <div class="feature-body">
+            CSV/JSON export (capped at 10k rows). Geo backfill endpoint resolves historic events missing coordinates.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tech stack -->
+    <div class="section">
+      <p class="section-label">Stack</p>
+      <div class="tags">
+        <span class="tag">Cloudflare Workers</span>
+        <span class="tag">D1 (SQLite)</span>
+        <span class="tag">Hono</span>
+        <span class="tag">TypeScript</span>
+        <span class="tag neutral">Next.js 15</span>
+        <span class="tag neutral">Leaflet</span>
+        <span class="tag neutral">Cobe Globe</span>
+        <span class="tag neutral">Workers AI</span>
+        <span class="tag neutral">AbuseIPDB</span>
+        <span class="tag neutral">Server-Sent Events</span>
+      </div>
+    </div>
+
+    <!-- Architecture note -->
+    <div class="section">
+      <p class="section-label">Architecture</p>
+      <div class="feature" style="max-width: 100%;">
+        <div class="feature-body">
+          Auth failures are ingested through a Cloudflare Worker, stored in D1, and streamed to the dashboard
+          over a Server-Sent Events connection. Geo coordinates are resolved on ingestion via a Zippopotam +
+          Census fallback chain and cached in KV. Blocking rules are written back to D1 and enforced
+          by middleware on every incoming request — no external firewall required.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>AttackMap — Cloudflare Workers geo-dashboard</span>
+      <span>Built with TypeScript + Hono + D1</span>
+    </footer>
+
+  </div>
 </body>
 </html>
