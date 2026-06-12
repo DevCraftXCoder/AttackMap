@@ -4,85 +4,162 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AttackMap — Auth-Failure Geo-Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #0a0a0a;
       --surface: #0f172a;
+      --surface-2: #131e30;
       --border: #1e293b;
       --accent: #e94560;
-      --accent-dim: rgba(233, 69, 96, 0.12);
+      --accent-dim: rgba(233, 69, 96, 0.10);
+      --accent-border: rgba(233, 69, 96, 0.22);
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
       --text-muted: #475569;
       --mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+      --sans: "DM Sans", system-ui, -apple-system, sans-serif;
+      --heading: "Syne", "DM Sans", system-ui, sans-serif;
     }
+
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg);
       color: var(--text-primary);
-      font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+      font-family: var(--sans);
       min-height: 100vh;
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Layout ── */
     .wrap {
-      max-width: 840px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 64px 24px 96px;
+      padding: 72px 24px 96px;
+    }
+
+    /* ── Notice bar ── */
+    .notice {
+      background: rgba(233, 69, 96, 0.07);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 56px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .notice-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 4px;
     }
 
     /* ── Hero ── */
     .hero {
-      display: flex;
-      align-items: flex-start;
-      gap: 18px;
-      margin-bottom: 56px;
-    }
-    .hero-bar {
-      width: 4px;
-      height: 72px;
-      background: var(--accent);
-      border-radius: 2px;
-      flex-shrink: 0;
-      margin-top: 8px;
+      margin-bottom: 64px;
     }
     .hero-eyebrow {
       font-size: 11px;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--accent);
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
+      font-family: var(--mono);
     }
     .hero-title {
-      font-size: 48px;
+      font-family: var(--heading);
+      font-size: clamp(42px, 7vw, 64px);
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--text-primary);
-      line-height: 1.1;
-      margin-bottom: 12px;
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+    .hero-title span {
+      color: var(--accent);
     }
     .hero-desc {
       font-size: 17px;
       color: var(--text-secondary);
-      max-width: 560px;
+      max-width: 580px;
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+    .hero-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .hero-badge {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 64px;
+    }
+    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px 18px;
+      text-align: center;
+    }
+    .stat-num {
+      display: block;
+      font-family: var(--heading);
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
     /* ── Section ── */
-    .section { margin-bottom: 48px; }
+    .section { margin-bottom: 56px; }
     .section-label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--text-muted);
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .section-label::after {
       content: "";
@@ -90,28 +167,156 @@
       height: 1px;
       background: var(--border);
     }
+    .section-title {
+      font-family: var(--heading);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .section-body {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: 660px;
+    }
+
+    /* ── Architecture diagram ── */
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: nowrap;
+      min-width: 520px;
+    }
+    .arch-node {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .arch-node-accent {
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+    .arch-node-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .arch-node-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .arch-node-accent .arch-node-value {
+      color: var(--accent);
+    }
+    .arch-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1;
+    }
+    .arch-branch {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .arch-branch .arch-node {
+      padding: 9px 14px;
+    }
+    .arch-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      padding-left: 4px;
+    }
+
+    /* ── How it works steps ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .step {
+      display: flex;
+      gap: 18px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-content {}
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .step-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
 
     /* ── Feature grid ── */
     .features {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
-    @media (max-width: 580px) { .features { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
 
     .feature {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 18px 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      transition: border-color 0.2s;
     }
-    .feature-icon {
-      font-size: 20px;
-      line-height: 1;
-      margin-bottom: 2px;
+    .feature:hover { border-color: rgba(233, 69, 96, 0.3); }
+    .feature-marker {
+      width: 24px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      margin-bottom: 6px;
     }
     .feature-title {
       font-size: 14px;
@@ -121,111 +326,359 @@
     .feature-body {
       font-size: 13px;
       color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ── Views table ── */
+    .views-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .views-table th {
+      text-align: left;
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 0 14px 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .views-table th:first-child { padding-left: 0; }
+    .views-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
+    .views-table td:first-child {
+      padding-left: 0;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      width: 110px;
+    }
+    .views-table tr:last-child td { border-bottom: none; }
 
     /* ── Tech stack ── */
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
+    .stack-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
-    .tag {
-      background: var(--accent-dim);
-      border: 1px solid rgba(233, 69, 96, 0.25);
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
+    @media (max-width: 560px) { .stack-grid { grid-template-columns: 1fr; } }
+    .stack-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .stack-layer {
+      font-size: 10px;
       font-family: var(--mono);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 80px;
     }
-    .tag-neutral {
-      background: rgba(148, 163, 184, 0.06);
-      border-color: var(--border);
+    .stack-tech {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ── Engineering callouts ── */
+    .callouts {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+    }
+    .callout-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .callout-body {
+      font-size: 12px;
       color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .callout-body code {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--accent);
     }
 
-    /* ── Stat row ── */
-    .stats-row {
+    /* ── Security section ── */
+    .security-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 40px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
-    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-
-    .stat-card {
+    @media (max-width: 580px) { .security-grid { grid-template-columns: 1fr; } }
+    .sec-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 20px 16px;
-      text-align: center;
+      padding: 16px 18px;
     }
-    .stat-num {
-      display: block;
-      font-size: 30px;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: -0.03em;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .stat-label {
+    .sec-card-title {
       font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .sec-card-body {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     /* ── Footer ── */
     footer {
-      margin-top: 64px;
+      margin-top: 72px;
       padding-top: 24px;
       border-top: 1px solid var(--border);
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .wrap { padding: 48px 18px 80px; }
+      .hero-title { font-size: 38px; }
+      .arch-flow { gap: 0; }
+    }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 32px; }
+      .stat-num { font-size: 26px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
 
+    <!-- Authorized use notice -->
+    <div class="notice">
+      <div class="notice-dot"></div>
+      <span><strong>Authorized use only.</strong> This dashboard is designed for monitoring systems you own or have explicit written authorization to observe. Unauthorized access to systems is illegal under the CFAA and equivalent laws globally.</span>
+    </div>
+
     <!-- Hero -->
     <div class="hero">
-      <div class="hero-bar"></div>
-      <div>
-        <p class="hero-eyebrow">Security Intelligence</p>
-        <h1 class="hero-title">AttackMap</h1>
-        <p class="hero-desc">
-          Real-time auth-failure geo-dashboard built on Cloudflare Workers.
-          Visualizes login attack patterns, scores anomalies, and enables
-          instant IP and geo blocking — all from the edge.
-        </p>
+      <p class="hero-eyebrow">// Security Dashboard</p>
+      <h1 class="hero-title">Attack<span>Map</span></h1>
+      <p class="hero-desc">
+        Real-time auth-failure geo-dashboard on Cloudflare Workers. Ingests failed
+        login attempts, scores anomalies, visualizes attack patterns across three map
+        modes, and enforces IP and geo blocks — all at the edge.
+      </p>
+      <div class="hero-stack">
+        <span class="hero-badge">TypeScript</span>
+        <span class="hero-badge">Cloudflare Workers</span>
+        <span class="hero-badge">D1</span>
+        <span class="hero-badge">Hono</span>
+        <span class="hero-badge">Next.js 15</span>
+        <span class="hero-badge">SSE</span>
+        <span class="hero-badge">Leaflet</span>
+        <span class="hero-badge">Cobe</span>
+        <span class="hero-badge">AbuseIPDB</span>
       </div>
     </div>
 
-    <!-- At-a-glance stats -->
+    <!-- Stats -->
     <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num">30+</span>
+        <span class="stat-label">React components</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">7</span>
+        <span class="stat-label">Dashboard views</span>
+      </div>
       <div class="stat-card">
         <span class="stat-num">Edge</span>
         <span class="stat-label">Zero cold starts</span>
       </div>
-      <div class="stat-card">
-        <span class="stat-num">D1</span>
-        <span class="stat-label">SQLite at the edge</span>
+    </div>
+
+    <!-- Architecture -->
+    <div class="section">
+      <p class="section-label">Architecture</p>
+      <div class="arch-diagram">
+        <div class="arch-flow">
+          <div class="arch-node arch-node-accent">
+            <div class="arch-node-label">Input</div>
+            <div class="arch-node-value">Auth failure</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-node">
+            <div class="arch-node-label">CF Worker</div>
+            <div class="arch-node-value">Hono + TypeScript</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-branch">
+            <div class="arch-node">
+              <div class="arch-node-label">Persist</div>
+              <div class="arch-node-value">D1 (SQLite)</div>
+            </div>
+            <div class="arch-node">
+              <div class="arch-node-label">Cache</div>
+              <div class="arch-node-value">Workers KV</div>
+            </div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-node">
+            <div class="arch-node-label">Stream</div>
+            <div class="arch-node-value">SSE endpoint</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-node arch-node-accent">
+            <div class="arch-node-label">Dashboard</div>
+            <div class="arch-node-value">Next.js 15 UI</div>
+          </div>
+        </div>
+        <p class="arch-note">
+          Enrichment (geo lookup, anomaly scoring, threat feed check) runs in
+          <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">waitUntil</code>
+          so ingestion latency is not affected. Block enforcement runs as Hono middleware on every request.
+        </p>
       </div>
-      <div class="stat-card">
-        <span class="stat-num">Live</span>
-        <span class="stat-label">Streaming event feed</span>
+    </div>
+
+    <!-- How it works -->
+    <div class="section">
+      <p class="section-label">How it works</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Event ingestion</div>
+            <div class="step-body">
+              Your API sends a <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">POST /ingest</code>
+              on every rejected login. The Worker validates the payload, writes the failure to D1, and returns
+              <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">202</code>
+              immediately to keep ingestion latency under 5 ms.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">Async enrichment</div>
+            <div class="step-body">
+              In <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">waitUntil</code>,
+              the Worker resolves geo coordinates (Zippopotam + U.S. Census fallback, cached in KV), assigns
+              an anomaly score (0–100), checks the IP against Spamhaus DROP and CINS Army threat feeds, and
+              evaluates active alert rules.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">Live streaming to the dashboard</div>
+            <div class="step-body">
+              The dashboard holds an open Server-Sent Events connection. New events appear within seconds.
+              KV-backed dedup prevents duplicate delivery on reconnect. The dashboard updates all seven
+              views — map, log, stats, intel — without a page refresh.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">Investigate &amp; respond</div>
+            <div class="step-body">
+              Probe any IP for AbuseIPDB reputation data directly from the log view. Block a single IP or
+              an entire country with optional expiry — the rule is written to D1 and the KV fast-path cache.
+              Blocked IPs are rejected by Hono middleware before reaching any route handler.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">05</div>
+          <div class="step-content">
+            <div class="step-title">Analyze patterns</div>
+            <div class="step-body">
+              The Stats view surfaces an attack heatmap (day-of-week × hour grid), time-series chart,
+              per-route breakdown, and failure reason distribution. The Intel view delivers an automated
+              threat analysis report cached for five minutes.
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- Dashboard views -->
+    <div class="section">
+      <p class="section-label">Dashboard Views</p>
+      <table class="views-table">
+        <thead>
+          <tr>
+            <th>View</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Map</td>
+            <td>Three switchable modes: command canvas (SVG attack arcs), interactive Leaflet map with country clustering, and WebGL Cobe 3D globe with attack density coloring.</td>
+          </tr>
+          <tr>
+            <td>Log</td>
+            <td>Filterable real-time event table with anomaly score badges. Filter by country, route, failure reason, or anomaly tier. One-click IP probe and block from any row.</td>
+          </tr>
+          <tr>
+            <td>Intel</td>
+            <td>Automated threat analysis report (top patterns, top countries, top targeted routes, recommended mitigations). Threat feed correlation results for matched IPs.</td>
+          </tr>
+          <tr>
+            <td>Stats</td>
+            <td>Attack frequency heatmap by day-of-week and hour. Time-series chart, per-route breakdown, failure reason distribution — all built with recharts.</td>
+          </tr>
+          <tr>
+            <td>Blocklist</td>
+            <td>Manage active IP and country blocks. Add, remove, or set expiry on any entry. Changes take effect on the next Worker request via KV cache invalidation.</td>
+          </tr>
+          <tr>
+            <td>Rules</td>
+            <td>Full CRUD for alert rules. Define brute-force thresholds (N failures in T seconds from one IP) or anomaly score thresholds. Rules evaluated on every ingested event.</td>
+          </tr>
+          <tr>
+            <td>Replay</td>
+            <td>Scrub through a time window and replay attack patterns frame-by-frame on the map. Speed control and frame counter. Useful for incident reconstruction.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Features -->
@@ -233,59 +686,60 @@
       <p class="section-label">Features</p>
       <div class="features">
         <div class="feature">
-          <div class="feature-icon">🗺️</div>
-          <div class="feature-title">Geo visualization</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Anomaly scoring engine</div>
           <div class="feature-body">
-            Auth failures plotted on a Leaflet map and a Cobe globe with country-level clustering and heat bands.
+            Every event receives a 0–100 score and pattern classification:
+            brute_force, credential_stuffing, rate_probe, tor_exit, known_bad_ip, bot, geo_concentration.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">⚡</div>
-          <div class="feature-title">Streaming event feed</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Three map modes</div>
           <div class="feature-body">
-            Server-Sent Events pipeline delivers new failures in real time. Anomaly scoring fires inline on ingestion.
+            Switch between a command canvas with animated attack arcs, a Leaflet interactive tile map, and a Cobe WebGL 3D globe — without leaving the view.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">🚫</div>
-          <div class="feature-title">IP &amp; geo blocking</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">IP deep probe</div>
           <div class="feature-body">
-            One-click IP block or country-level geo block with optional expiry. Blocks enforced at the Worker edge.
+            One-click AbuseIPDB enrichment with confidence score, abuse categories, reverse-lookup hostname, and ISP. API key never leaves the Worker.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">🔬</div>
-          <div class="feature-title">Deep IP probe</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Edge-enforced blocking</div>
           <div class="feature-body">
-            AbuseIPDB enrichment + reverse-lookup for any suspicious IP, surfaced directly in the dashboard.
+            IP and country blocks written in the dashboard are enforced by Hono middleware on every Worker request. Sub-millisecond enforcement via Workers KV fast path.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">📊</div>
-          <div class="feature-title">Heatmap &amp; analytics</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Alert rules</div>
           <div class="feature-body">
-            Attack frequency heatmap by day-of-week and hour. Per-route breakdown, failure reason distribution.
+            CRUD interface for threshold-based alert rules. Brute-force (N failures/T seconds) and anomaly score triggers. Cooldown prevents alert storms from the same source.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">🔗</div>
-          <div class="feature-title">Shareable snapshots</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Threat feed correlation</div>
           <div class="feature-body">
-            Generate a time-limited public share link exposing aggregate stats — no raw IPs, no admin access required.
+            Ingested IPs checked against Spamhaus DROP and CINS Army known-bad lists. Matches flagged inline — no separate scan required.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">🤖</div>
-          <div class="feature-title">AI threat summary</div>
+          <div class="feature-marker"></div>
+          <div class="feature-title">Share tokens</div>
           <div class="feature-body">
-            Workers AI generates a plain-language threat-intel report from recent failures, cached for 5 minutes.
+            Generate a time-limited public link showing aggregate stats (event count, top countries, top routes). Raw IPs and individual events are never exposed.
           </div>
         </div>
         <div class="feature">
-          <div class="feature-icon">🗃️</div>
+          <div class="feature-marker"></div>
           <div class="feature-title">Export &amp; backfill</div>
           <div class="feature-body">
-            CSV/JSON export (capped at 10k rows). Geo backfill endpoint resolves historic events missing coordinates.
+            CSV or JSON export (up to 10,000 rows). Geo backfill endpoint resolves coordinates for historic events ingested without location data.
           </div>
         </div>
       </div>
@@ -294,36 +748,142 @@
     <!-- Tech stack -->
     <div class="section">
       <p class="section-label">Stack</p>
-      <div class="tags">
-        <span class="tag">Cloudflare Workers</span>
-        <span class="tag">D1 (SQLite)</span>
-        <span class="tag">Hono</span>
-        <span class="tag">TypeScript</span>
-        <span class="tag neutral">Next.js 15</span>
-        <span class="tag neutral">Leaflet</span>
-        <span class="tag neutral">Cobe Globe</span>
-        <span class="tag neutral">Workers AI</span>
-        <span class="tag neutral">AbuseIPDB</span>
-        <span class="tag neutral">Server-Sent Events</span>
+      <div class="stack-grid">
+        <div class="stack-row">
+          <span class="stack-layer">Runtime</span>
+          <span class="stack-tech">Cloudflare Workers</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Database</span>
+          <span class="stack-tech">D1 — SQLite at the edge</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Backend</span>
+          <span class="stack-tech">Hono · TypeScript</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Frontend</span>
+          <span class="stack-tech">Next.js 15 (App Router)</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Map</span>
+          <span class="stack-tech">Leaflet · Cobe (WebGL)</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Charts</span>
+          <span class="stack-tech">recharts · framer-motion</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Streaming</span>
+          <span class="stack-tech">Server-Sent Events</span>
+        </div>
+        <div class="stack-row">
+          <span class="stack-layer">Enrichment</span>
+          <span class="stack-tech">AbuseIPDB · Spamhaus · CINS</span>
+        </div>
       </div>
     </div>
 
-    <!-- Architecture note -->
+    <!-- Key engineering decisions -->
     <div class="section">
-      <p class="section-label">Architecture</p>
-      <div class="feature" style="max-width: 100%;">
-        <div class="feature-body">
-          Auth failures are ingested through a Cloudflare Worker, stored in D1, and streamed to the dashboard
-          over a Server-Sent Events connection. Geo coordinates are resolved on ingestion via a Zippopotam +
-          Census fallback chain and cached in KV. Blocking rules are written back to D1 and enforced
-          by middleware on every incoming request — no external firewall required.
+      <p class="section-label">Engineering Decisions</p>
+      <div class="callouts">
+        <div class="callout">
+          <div class="callout-title">Edge-native — no separate server layer</div>
+          <div class="callout-body">
+            Every operation (ingestion, SSE streaming, block enforcement, geo lookup) runs inside a Cloudflare
+            Worker. No Node.js server, no external database host, no proxy layer to maintain. Cold starts are
+            structurally impossible on Cloudflare's edge network.
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">SSE over WebSockets</div>
+          <div class="callout-body">
+            Auth-failure data flows in one direction (server → browser). SSE uses standard HTTP/2 multiplexing,
+            requires no special protocol negotiation, and avoids the Durable Objects requirement that full-duplex
+            WebSocket connections impose on CF Workers. Reconnect behavior is handled automatically by the browser.
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-title"><code>waitUntil</code>-deferred enrichment</div>
+          <div class="callout-body">
+            Geo resolution, anomaly scoring, alert evaluation, and KV cache writes all run in <code>waitUntil</code>.
+            The <code>POST /ingest</code> endpoint returns <code>202</code> immediately — enrichment completes
+            asynchronously within the same Worker invocation without adding latency to the write path.
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Block enforcement as middleware</div>
+          <div class="callout-body">
+            IP and geo blocks are enforced by a Hono middleware reading from a Workers KV fast-path cache (D1
+            fallback on miss). No external firewall, no WAF rule propagation delay. A blocked IP is rejected
+            before it reaches any route handler on every Worker request.
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Anomaly scoring at ingestion time</div>
+          <div class="callout-body">
+            Scoring runs inline on write (or in <code>waitUntil</code> for slower heuristics). Every event in
+            D1 already carries its score and pattern classification. The dashboard never computes scores on the
+            read path — queries are simple column reads.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security architecture -->
+    <div class="section">
+      <p class="section-label">Security Architecture</p>
+      <div class="security-grid">
+        <div class="sec-card">
+          <div class="sec-card-title">Admin auth</div>
+          <div class="sec-card-body">
+            All admin endpoints require a pre-shared bearer token validated via Web Crypto
+            <code style="font-family:var(--mono);font-size:11px">timingSafeEqual</code>.
+            No tokens are evaluated by string comparison.
+          </div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">Block enforcement</div>
+          <div class="sec-card-body">
+            Blocking middleware sits at the first Hono layer. Blocked IPs and country codes are
+            rejected before reaching any route handler. KV cache keeps enforcement under 1 ms.
+          </div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">Share token scoping</div>
+          <div class="sec-card-body">
+            Public share tokens expose aggregate statistics only. Raw IPs and individual event
+            records are never returned on share token responses.
+          </div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">API key proxying</div>
+          <div class="sec-card-body">
+            AbuseIPDB enrichment calls are proxied through the Worker. The API key is a Worker
+            secret — it is never sent to the browser or exposed in any client response.
+          </div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">CSRF protection</div>
+          <div class="sec-card-body">
+            CSRF tokens required on all state-mutating endpoints (POST, PUT, DELETE).
+            Token validated server-side on every write path.
+          </div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">KV dedup hardening</div>
+          <div class="sec-card-body">
+            SSE dedup keys use a salted hash of the event ID, not the raw IP, to prevent
+            KV namespace enumeration. Alert cooldown prevents alert storms from repeated events.
+          </div>
         </div>
       </div>
     </div>
 
     <footer>
       <span>AttackMap — Cloudflare Workers geo-dashboard</span>
-      <span>Built with TypeScript + Hono + D1</span>
+      <a href="https://github.com/DevCraftXCoder/AttackMap">View on GitHub</a>
     </footer>
 
   </div>
