@@ -36,6 +36,15 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
+    @media (max-width: 600px) {
+      body { overflow-x: hidden; }
+    }
+
+    /* ── Table overflow ── */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
     /* ── Layout ── */
     .wrap {
@@ -122,7 +131,8 @@
       gap: 12px;
       margin-bottom: 64px;
     }
-    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 380px) { .stats-row { grid-template-columns: 1fr; } }
 
     .stat-card {
       background: var(--surface);
@@ -455,6 +465,220 @@
       line-height: 1.6;
     }
 
+    /* ── Time-window selector ── */
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .window-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-right: 4px;
+    }
+    .window-pills {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .window-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      letter-spacing: 0.04em;
+      user-select: none;
+    }
+    .window-pill:hover {
+      border-color: var(--accent-border);
+      color: var(--text-secondary);
+    }
+    .window-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Live stats row ── */
+    .live-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 600px) { .live-stats-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 380px)  { .live-stats-row { grid-template-columns: 1fr; } }
+
+    /* ── Networks panel ── */
+    .networks-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 22px;
+      margin-top: 16px;
+    }
+    .networks-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .networks-panel-title {
+      font-family: var(--heading);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    .networks-panel-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+    .networks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .network-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .network-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      width: 180px;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: default;
+    }
+    .network-bar-wrap {
+      flex: 1;
+      min-width: 80px;
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .network-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .network-count {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .network-pct {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 38px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .networks-empty {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 28px 0;
+    }
+    .networks-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .skeleton-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .skeleton-block {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      animation: skeleton-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes skeleton-pulse {
+      0%,100% { opacity: 0.5; }
+      50%      { opacity: 1; }
+    }
+
+    /* ── Live dashboard section ── */
+    .live-section {
+      margin-bottom: 56px;
+      border-top: 1px solid var(--border);
+      padding-top: 48px;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+    .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: live-blink 1.6s ease-in-out infinite;
+    }
+    @keyframes live-blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+    .connect-hint {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .connect-hint code {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--accent);
+    }
+
     /* ── Footer ── */
     footer {
       margin-top: 72px;
@@ -477,9 +701,17 @@
       .hero-title { font-size: 38px; }
       .arch-flow { gap: 0; }
     }
+    @media (max-width: 600px) {
+      .wrap { padding: 48px 16px 64px; }
+      .network-name { width: 130px; font-size: 12px; }
+    }
     @media (max-width: 480px) {
       .hero-title { font-size: 32px; }
       .stat-num { font-size: 26px; }
+      .window-pill { padding: 5px 9px; font-size: 10px; }
+    }
+    @media (max-width: 380px) {
+      .hero-title { font-size: 28px; }
     }
   </style>
 </head>
@@ -641,6 +873,7 @@
     <!-- Dashboard views -->
     <div class="section">
       <p class="section-label">Dashboard Views</p>
+      <div class="table-scroll">
       <table class="views-table">
         <thead>
           <tr>
@@ -679,6 +912,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Features -->
@@ -881,11 +1115,226 @@
       </div>
     </div>
 
+    <!-- Live Dashboard — Time-Window Selector + Stats + Networks Panel -->
+    <div class="live-section">
+      <div class="live-badge"><div class="live-dot"></div>Live Dashboard</div>
+      <h2 class="section-title">Real-Time Threat Overview</h2>
+      <p class="section-body" style="margin-bottom:24px;">
+        Connect this panel to a running AttackMap backend to display live auth-failure statistics
+        and top offending networks. Configure <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">CONFIG.BASE_URL</code>
+        and <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">CONFIG.ADMIN_KEY</code> below to activate.
+      </p>
+
+      <div class="connect-hint">
+        Set <code>CONFIG.BASE_URL</code> and <code>CONFIG.ADMIN_KEY</code> in the script block at the bottom of this
+        file to connect to your backend. Leave empty to display placeholder values.
+      </div>
+
+      <!-- Feature #8: Time-window selector -->
+      <div class="window-controls">
+        <span class="window-label">Window</span>
+        <div class="window-pills">
+          <button class="window-pill" data-window="1h">1h</button>
+          <button class="window-pill" data-window="6h">6h</button>
+          <button class="window-pill active" data-window="24h">24h</button>
+          <button class="window-pill" data-window="7d">7d</button>
+          <button class="window-pill" data-window="30d">30d</button>
+        </div>
+      </div>
+
+      <!-- Live stats cards -->
+      <div class="live-stats-row" id="live-stats-row">
+        <div class="stat-card">
+          <span class="stat-num" id="stat-total">–</span>
+          <span class="stat-label">Total failures</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="stat-critical">–</span>
+          <span class="stat-label">Critical events</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="stat-countries">–</span>
+          <span class="stat-label">Countries</span>
+        </div>
+      </div>
+
+      <!-- Feature #7: Top Offending Networks -->
+      <p class="section-label">Top Offending Networks</p>
+      <div class="networks-panel" id="networks-panel">
+        <div class="networks-panel-header">
+          <span class="networks-panel-title">Top Offending Networks</span>
+          <span class="networks-panel-meta" id="networks-meta">window: 24h</span>
+        </div>
+        <div id="networks-body">
+          <div class="networks-skeleton" id="networks-skeleton">
+            <div class="skeleton-row">
+              <div class="skeleton-block" style="width:140px;height:13px;"></div>
+              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
+              <div class="skeleton-block" style="width:34px;height:11px;"></div>
+            </div>
+            <div class="skeleton-row">
+              <div class="skeleton-block" style="width:110px;height:13px;"></div>
+              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
+              <div class="skeleton-block" style="width:28px;height:11px;"></div>
+            </div>
+            <div class="skeleton-row">
+              <div class="skeleton-block" style="width:160px;height:13px;"></div>
+              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
+              <div class="skeleton-block" style="width:22px;height:11px;"></div>
+            </div>
+            <div class="skeleton-row">
+              <div class="skeleton-block" style="width:125px;height:13px;"></div>
+              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
+              <div class="skeleton-block" style="width:30px;height:11px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer>
       <span>AttackMap — Cloudflare Workers geo-dashboard</span>
       <a href="https://github.com/DevCraftXCoder/AttackMap">View on GitHub</a>
     </footer>
 
   </div>
+  <script>
+    /* ── Configuration ── */
+    var CONFIG = {
+      /* Set these to connect to a live backend. Leave empty for placeholder display. */
+      BASE_URL:  '',   /* e.g. 'https://your-worker.workers.dev' */
+      ADMIN_KEY: ''    /* pre-shared admin bearer token */
+    };
+
+    /* ── State ── */
+    var currentWindow = '24h';
+
+    /* ── DOM refs ── */
+    var statTotal     = document.getElementById('stat-total');
+    var statCritical  = document.getElementById('stat-critical');
+    var statCountries = document.getElementById('stat-countries');
+    var networksBody  = document.getElementById('networks-body');
+    var networksMeta  = document.getElementById('networks-meta');
+    var skeleton      = document.getElementById('networks-skeleton');
+
+    /* ── Fetch helper ── */
+    function apiFetch(path) {
+      if (!CONFIG.BASE_URL) return Promise.resolve(null);
+      return fetch(CONFIG.BASE_URL + path, {
+        headers: { 'Authorization': 'Bearer ' + CONFIG.ADMIN_KEY }
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).catch(function() { return null; });
+    }
+
+    /* ── Render networks list ── */
+    function renderNetworks(data) {
+      if (!data || !Array.isArray(data.networks) || data.networks.length === 0) {
+        networksBody.innerHTML =
+          '<div class="networks-empty">No network data in this window</div>';
+        return;
+      }
+      var list = document.createElement('div');
+      list.className = 'networks-list';
+      data.networks.slice(0, 10).forEach(function(n) {
+        var fullName = n.name || 'Unknown';
+        var displayName = fullName.length > 32 ? fullName.slice(0, 32) + '…' : fullName;
+        var pct = typeof n.percentage === 'number' ? n.percentage : 0;
+        var count = n.count != null ? n.count : '–';
+        var row = document.createElement('div');
+        row.className = 'network-row';
+        row.innerHTML =
+          '<span class="network-name" title="' + escapeAttr(fullName) + '">' +
+            escapeHtml(displayName) +
+          '</span>' +
+          '<div class="network-bar-wrap">' +
+            '<div class="network-bar" style="width:' + Math.min(pct, 100).toFixed(1) + '%"></div>' +
+          '</div>' +
+          '<span class="network-count">' + escapeHtml(String(count)) + '</span>' +
+          '<span class="network-pct">' + pct.toFixed(1) + '%</span>';
+        list.appendChild(row);
+      });
+      networksBody.innerHTML = '';
+      networksBody.appendChild(list);
+    }
+
+    /* ── Render stats ── */
+    function renderStats(data) {
+      if (!data) {
+        statTotal.textContent     = '–';
+        statCritical.textContent  = '–';
+        statCountries.textContent = '–';
+        return;
+      }
+      statTotal.textContent     = fmt(data.total_failures != null ? data.total_failures : data.total_events);
+      statCritical.textContent  = fmt(data.critical_count != null ? data.critical_count : data.critical);
+      statCountries.textContent = fmt(data.unique_countries != null ? data.unique_countries : data.countries);
+    }
+
+    /* ── Number formatter ── */
+    function fmt(n) {
+      if (n == null || n !== n) return '–';
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000)    return (n / 1000).toFixed(1) + 'k';
+      return String(n);
+    }
+
+    /* ── HTML helpers ── */
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    /* ── Show skeleton while loading ── */
+    function showSkeleton() {
+      networksBody.innerHTML =
+        '<div class="networks-skeleton">' +
+        '<div class="skeleton-row"><div class="skeleton-block" style="width:140px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:34px;height:11px;"></div></div>' +
+        '<div class="skeleton-row"><div class="skeleton-block" style="width:110px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:28px;height:11px;"></div></div>' +
+        '<div class="skeleton-row"><div class="skeleton-block" style="width:160px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:22px;height:11px;"></div></div>' +
+        '<div class="skeleton-row"><div class="skeleton-block" style="width:125px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:30px;height:11px;"></div></div>' +
+        '</div>';
+    }
+
+    /* ── Main refresh: load all data for the current window ── */
+    function refreshAll() {
+      var w = currentWindow;
+      networksMeta.textContent = 'window: ' + w;
+
+      if (!CONFIG.BASE_URL) {
+        /* No backend configured — keep skeleton as-is */
+        return;
+      }
+
+      showSkeleton();
+      statTotal.textContent = statCritical.textContent = statCountries.textContent = '…';
+
+      Promise.all([
+        apiFetch('/api/admin/auth-failures/stats?window=' + w),
+        apiFetch('/api/admin/auth-failures/networks?window=' + w)
+      ]).then(function(results) {
+        renderStats(results[0]);
+        renderNetworks(results[1]);
+      });
+    }
+
+    /* ── Wire window pill buttons ── */
+    document.querySelectorAll('.window-pill').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.window-pill').forEach(function(b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        currentWindow = btn.getAttribute('data-window');
+        refreshAll();
+      });
+    });
+
+    /* ── Initial load ── */
+    refreshAll();
+  </script>
 </body>
 </html>
