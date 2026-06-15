@@ -439,7 +439,7 @@
     .empty-state-cta:hover { background: rgba(233,69,96,0.18); }
 
     /* ── Skeleton shimmer ── */
-    .skeleton {
+    .skeleton, .skeleton-block {
       background: rgba(255,255,255,0.04);
       border-radius: 4px;
       animation: shimmer 1.5s ease-in-out infinite;
@@ -504,7 +504,7 @@
     .sidebar-collapse-handle:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
     .sidebar-section-label {
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text-muted);
@@ -628,7 +628,7 @@
       gap: 0;
     }
     .heatmap-label {
-      font-size: 9px;
+      font-size: 10px;
       font-family: var(--mono);
       color: var(--text-muted);
       text-align: center;
@@ -692,7 +692,7 @@
       border-radius: 4px;
       padding: 2px 8px;
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--accent);
       letter-spacing: 0.08em;
@@ -1184,15 +1184,15 @@
                 </div>
               </div>
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px;color:var(--text-muted)">EVIDENCE</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px;color:var(--text-muted)">EVIDENCE</div>
               <div class="sidebar-panel">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select any event or IP to see enrichment data here.</div>
                 <div class="sidebar-ghost-bars">
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
               </div>
             </div>
@@ -1327,7 +1327,7 @@
                 </div>
               </div>
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
               <div class="sidebar-panel">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to inspect the IP.</div>
                 <div class="sidebar-ghost-bars">
@@ -1447,7 +1447,7 @@
                 </div>
               </div>
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
               <div class="sidebar-panel">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a pattern to see correlated IPs.</div>
                 <div class="sidebar-ghost-bars">
@@ -1549,7 +1549,7 @@
                 </div>
               </div>
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
               <div class="sidebar-panel">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click a chart cell to drill down.</div>
                 <div class="sidebar-ghost-bars">
@@ -1603,7 +1603,7 @@
                 <label class="form-label">Reason (optional)</label>
                 <input class="form-input" type="text" placeholder="e.g. Brute force — 300 failures in 5min" id="block-reason-input" />
               </div>
-              <button class="btn btn-primary" onclick="handleBlockIP()">Add Block</button>
+              <button class="btn btn-primary" onclick="handleBlockIP()">Block IP</button>
             </div>
             <!-- Blocklist table -->
             <div class="card">
@@ -1626,6 +1626,11 @@
                 </thead>
                 <tbody id="blocklist-body"></tbody>
               </table>
+              <div id="blocklist-empty" class="empty-state" style="display:none">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                <div class="empty-state-title">No active blocks</div>
+                <div class="empty-state-body">No IPs or CIDR ranges are currently blocked. Use the form above to add a block, or wait for auto-block rules to fire.</div>
+              </div>
               </div>
             </div>
           </div>
@@ -1649,7 +1654,7 @@
                 </div>
               </div>
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
               <div class="sidebar-panel">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a block entry to see history.</div>
                 <div class="sidebar-ghost-bars">
@@ -1674,6 +1679,10 @@
             <span class="pill" data-filter-group="rules-filter" data-val="disabled">Disabled</span>
           </div>
           <div class="filter-spacer"></div>
+          <div class="stream-status">
+            <div class="stream-dot"></div>
+            <span>ARMED</span>
+          </div>
           <button class="icon-btn" data-tip="New rule" onclick="document.getElementById('rule-form-card').scrollIntoView({behavior:'smooth'})">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
           </button>
@@ -1775,6 +1784,12 @@
                 </tr>
               </tbody>
             </table>
+            <div id="rules-empty" class="empty-state" style="display:none">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+              <div class="empty-state-title">No rules configured</div>
+              <div class="empty-state-body">Use the templates above or the form below to create your first detection rule. Rules evaluate on every ingested event in real-time.</div>
+              <button class="empty-state-cta" onclick="document.getElementById('rule-form-card').scrollIntoView({behavior:'smooth'})">Create a rule</button>
+            </div>
           </div>
           <!-- New rule form -->
           <div class="card" id="rule-form-card">
@@ -1831,6 +1846,13 @@
 
       <!-- ─────────── TAB 7: REPLAY ─────────── -->
       <div class="tab-pane" id="tab-replay">
+        <div class="filter-bar">
+          <div class="filter-spacer"></div>
+          <div class="stream-status">
+            <div class="stream-dot"></div>
+            <span>ARMED</span>
+          </div>
+        </div>
         <div class="replay-layout">
           <div class="replay-top">
             <!-- Date range -->
@@ -2259,6 +2281,15 @@
           '<td><button class="btn btn-danger btn-sm" onclick="removeBlock(this)">Remove</button></td>' +
           '</tr>';
       }).join('');
+      updateBlocklistEmpty();
+    }
+
+    function updateBlocklistEmpty() {
+      var tbody = document.getElementById('blocklist-body');
+      var empty = document.getElementById('blocklist-empty');
+      if (!tbody || !empty) return;
+      var hasRows = tbody.querySelectorAll('tr').length > 0;
+      empty.style.display = hasRows ? 'none' : 'flex';
     }
 
     function handleBlockIP() {
@@ -2279,6 +2310,7 @@
       var row = btn.closest('tr');
       if (row) row.remove();
       showToast('Block removed', 'success');
+      updateBlocklistEmpty();
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2358,7 +2390,7 @@
       data.forEach(function (row, di) {
         var tr = document.createElement('tr');
         var dayTd = document.createElement('td');
-        dayTd.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-muted);padding-right:6px;white-space:nowrap';
+        dayTd.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--text-muted);padding-right:6px;white-space:nowrap';
         dayTd.textContent = days[di];
         tr.appendChild(dayTd);
 
