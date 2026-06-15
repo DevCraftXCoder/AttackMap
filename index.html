@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AttackMap — Auth-Failure Geo-Dashboard</title>
+  <title>AttackMap — Security Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,336 +16,376 @@
       --surface-2: #131e30;
       --border: #1e293b;
       --accent: #e94560;
-      --accent-dim: rgba(233, 69, 96, 0.10);
-      --accent-border: rgba(233, 69, 96, 0.22);
+      --accent-dim: rgba(233,69,96,0.10);
+      --accent-border: rgba(233,69,96,0.22);
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
       --text-muted: #475569;
-      --mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
-      --sans: "DM Sans", system-ui, -apple-system, sans-serif;
-      --heading: "Syne", "DM Sans", system-ui, sans-serif;
+      --sev-critical: #ef4444;
+      --sev-high: #f97316;
+      --sev-med: #eab308;
+      --sev-low: #22c55e;
+      --sev-none: #475569;
+      --mono: "JetBrains Mono", monospace;
+      --sans: "DM Sans", system-ui, sans-serif;
+      --heading: "Syne", sans-serif;
     }
 
-    html { scroll-behavior: smooth; }
-
+    html, body { height: 100%; }
     body {
       background: var(--bg);
       color: var(--text-primary);
       font-family: var(--sans);
-      min-height: 100vh;
+      font-size: 14px;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
-    }
-    @media (max-width: 600px) {
-      body { overflow-x: hidden; }
-    }
-
-    /* ── Table overflow ── */
-    .table-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* ── Layout ── */
-    .wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 72px 24px 96px;
-    }
-
-    /* ── Notice bar ── */
-    .notice {
-      background: rgba(233, 69, 96, 0.07);
-      border: 1px solid var(--accent-border);
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-bottom: 56px;
+      overflow: hidden;
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    .notice-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-      margin-top: 4px;
+      flex-direction: column;
     }
 
-    /* ── Hero ── */
-    .hero {
-      margin-bottom: 64px;
+    /* ── Warning banner ── */
+    .warning-banner {
+      display: none;
+      background: rgba(234,179,8,0.12);
+      border-bottom: 1px solid rgba(234,179,8,0.3);
+      padding: 8px 20px;
+      font-size: 12px;
+      color: #fbbf24;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .hero-eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-weight: 700;
-      margin-bottom: 14px;
-      font-family: var(--mono);
+    .warning-banner.active { display: flex; }
+    .warning-banner-text { flex: 1; }
+    .warning-banner-close {
+      background: none;
+      border: none;
+      color: #fbbf24;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 4px;
+      opacity: 0.7;
     }
-    .hero-title {
+    .warning-banner-close:hover { opacity: 1; }
+
+    /* ── App shell ── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      height: 52px;
+      flex-shrink: 0;
+    }
+    .topbar-brand {
       font-family: var(--heading);
-      font-size: clamp(42px, 7vw, 64px);
+      font-size: 17px;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--text-primary);
-      line-height: 1.05;
-      margin-bottom: 18px;
+      margin-right: 28px;
+      flex-shrink: 0;
     }
-    .hero-title span {
-      color: var(--accent);
-    }
-    .hero-desc {
-      font-size: 17px;
-      color: var(--text-secondary);
-      max-width: 580px;
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-    .hero-stack {
+    .topbar-brand span { color: var(--accent); }
+
+    .tab-bar {
       display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
+      gap: 2px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-    .hero-badge {
-      background: rgba(255,255,255,0.04);
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      height: 52px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover {
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.03);
+    }
+    .tab-btn.active {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border-bottom-color: var(--accent);
+    }
+    .tab-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    /* ── Stream status ── */
+    .stream-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    .stream-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sev-low);
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    /* ── Main area ── */
+    .main-area {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Tab panes ── */
+    .tab-pane {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: column;
+    }
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* ── Content layout with optional right sidebar ── */
+    .content-with-sidebar {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .content-main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .content-main::-webkit-scrollbar { width: 6px; }
+    .content-main::-webkit-scrollbar-track { background: transparent; }
+    .content-main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 4px;
+    }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .pill:hover { border-color: var(--accent-border); color: var(--text-secondary); }
+    .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .filter-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .filter-select {
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      outline: none;
+    }
+    .filter-select:focus { border-color: var(--accent-border); }
+
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      position: relative;
+    }
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--accent-border);
+      color: var(--text-secondary);
+    }
+    .icon-btn svg { width: 14px; height: 14px; }
+    .icon-btn[data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 5px;
-      padding: 4px 10px;
+      padding: 3px 8px;
       font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      pointer-events: none;
       font-family: var(--mono);
-      letter-spacing: 0.03em;
+      z-index: 50;
     }
+    .filter-spacer { flex: 1; }
 
-    /* ── Stats row ── */
-    .stats-row {
+    /* ── Card system ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .card + .card { margin-top: 14px; }
+    .card-title {
+      font-family: var(--heading);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+    /* ── Stat cards ── */
+    .stat-cards {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
-      margin-bottom: 64px;
+      margin-bottom: 16px;
     }
-    @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 380px) { .stats-row { grid-template-columns: 1fr; } }
-
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 22px 18px;
-      text-align: center;
-    }
-    .stat-num {
-      display: block;
-      font-family: var(--heading);
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: -0.04em;
-      line-height: 1;
-      margin-bottom: 5px;
-    }
-    .stat-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    /* ── Section ── */
-    .section { margin-bottom: 56px; }
-    .section-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      font-weight: 700;
-      margin-bottom: 20px;
+      padding: 16px 20px;
+      min-height: 110px;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .section-label::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    .section-title {
-      font-family: var(--heading);
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-      margin-bottom: 10px;
-    }
-    .section-body {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.65;
-      max-width: 660px;
-    }
-
-    /* ── Architecture diagram ── */
-    .arch-diagram {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px 24px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-    }
-    .arch-flow {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      flex-wrap: nowrap;
-      min-width: 520px;
-    }
-    .arch-node {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .arch-node-accent {
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-    .arch-node-label {
-      font-family: var(--mono);
-      font-size: 10px;
+    .stat-card-label {
+      font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      font-family: var(--mono);
     }
-    .arch-node-value {
-      font-size: 13px;
-      font-weight: 600;
+    .stat-card-value {
+      font-family: var(--heading);
+      font-size: 28px;
+      font-weight: 800;
       color: var(--text-primary);
-    }
-    .arch-node-accent .arch-node-value {
-      color: var(--accent);
-    }
-    .arch-arrow {
-      flex-shrink: 0;
-      width: 32px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 16px;
+      letter-spacing: -0.04em;
       line-height: 1;
     }
-    .arch-branch {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .arch-branch .arch-node {
-      padding: 9px 14px;
-    }
-    .arch-note {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 14px;
-      padding-left: 4px;
-    }
-
-    /* ── How it works steps ── */
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-    .step {
-      display: flex;
-      gap: 18px;
-      padding: 20px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .step:last-child { border-bottom: none; }
-    .step-num {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--accent-dim);
-      border: 1px solid var(--accent-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--mono);
+    .stat-card-delta {
       font-size: 11px;
+      font-family: var(--mono);
+      color: var(--sev-low);
+    }
+    .stat-card-delta.neg { color: var(--sev-critical); }
+    .stat-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Severity badges ── */
+    .sev-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
       font-weight: 700;
-      color: var(--accent);
-      flex-shrink: 0;
-      margin-top: 2px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
-    .step-content {}
-    .step-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-    .step-body {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
+    .sev-critical { background: rgba(239,68,68,0.15); color: var(--sev-critical); }
+    .sev-high { background: rgba(249,115,22,0.15); color: var(--sev-high); }
+    .sev-med { background: rgba(234,179,8,0.15); color: var(--sev-med); }
+    .sev-low { background: rgba(34,197,94,0.15); color: var(--sev-low); }
+    .sev-none { background: rgba(71,85,105,0.2); color: var(--sev-none); }
 
-    /* ── Feature grid ── */
-    .features {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
-
-    .feature {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: border-color 0.2s;
-    }
-    .feature:hover { border-color: rgba(233, 69, 96, 0.3); }
-    .feature-marker {
-      width: 24px;
-      height: 3px;
-      background: var(--accent);
-      border-radius: 2px;
-      margin-bottom: 6px;
-    }
-    .feature-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .feature-body {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-    }
-
-    /* ── Views table ── */
-    .views-table {
+    /* ── Data table ── */
+    .data-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
     }
-    .views-table th {
+    .data-table th {
       text-align: left;
       font-size: 10px;
       font-family: var(--mono);
@@ -353,988 +393,2165 @@
       text-transform: uppercase;
       color: var(--text-muted);
       font-weight: 700;
-      padding: 0 14px 12px 14px;
+      padding: 8px 12px 8px 0;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
-    .views-table th:first-child { padding-left: 0; }
-    .views-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
+    .data-table th:first-child { padding-left: 0; }
+    .data-table td {
+      padding: 10px 12px 10px 0;
+      border-bottom: 1px solid rgba(30,41,59,0.6);
       color: var(--text-secondary);
-      line-height: 1.5;
+      vertical-align: middle;
     }
-    .views-table td:first-child {
-      padding-left: 0;
-      font-weight: 600;
-      color: var(--text-primary);
-      white-space: nowrap;
-      width: 110px;
-    }
-    .views-table tr:last-child td { border-bottom: none; }
+    .data-table td:first-child { padding-left: 0; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .mono { font-family: var(--mono); font-size: 12px; }
+    .ts-meta { font-size: 11px; color: var(--text-muted); font-style: italic; }
 
-    /* ── Tech stack ── */
-    .stack-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    @media (max-width: 560px) { .stack-grid { grid-template-columns: 1fr; } }
-    .stack-row {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    .stack-layer {
-      font-size: 10px;
-      font-family: var(--mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      white-space: nowrap;
-      min-width: 80px;
-    }
-    .stack-tech {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    /* ── Engineering callouts ── */
-    .callouts {
+    /* ── Empty state ── */
+    .empty-state {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
       gap: 10px;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      text-align: center;
     }
-    .callout {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 8px 8px 0;
-      padding: 14px 16px;
-    }
-    .callout-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-    .callout-body {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .callout-body code {
-      font-family: var(--mono);
-      font-size: 11px;
-      background: rgba(255,255,255,0.06);
-      padding: 1px 5px;
-      border-radius: 3px;
+    .empty-state svg { width: 40px; height: 40px; opacity: 0.3; }
+    .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+    .empty-state-body { font-size: 13px; max-width: 320px; }
+    .empty-state-cta {
+      margin-top: 6px;
+      padding: 7px 16px;
+      border-radius: 7px;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-dim);
       color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .empty-state-cta:hover { background: rgba(233,69,96,0.18); }
+
+    /* ── Skeleton shimmer ── */
+    .skeleton {
+      background: rgba(255,255,255,0.04);
+      border-radius: 4px;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%,100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
     }
 
-    /* ── Security section ── */
-    .security-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    /* ── Right sidebar ── */
+    .right-sidebar {
+      width: 280px;
+      min-width: 280px;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: width 0.2s, min-width 0.2s;
+      flex-shrink: 0;
     }
-    @media (max-width: 580px) { .security-grid { grid-template-columns: 1fr; } }
-    .sec-card {
+    .right-sidebar.collapsed {
+      width: 28px;
+      min-width: 28px;
+      overflow: hidden;
+    }
+    .right-sidebar.collapsed .sidebar-content { display: none; }
+    .sidebar-collapse-btn {
+      position: absolute;
+      left: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px 18px;
-    }
-    .sec-card-title {
-      font-size: 12px;
-      font-weight: 700;
-      font-family: var(--mono);
-      color: var(--text-primary);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .sec-card-body {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    /* ── Time-window selector ── */
-    .window-controls {
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 32px;
-    }
-    .window-label {
-      font-family: var(--mono);
+      justify-content: center;
       font-size: 10px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
       color: var(--text-muted);
-      font-weight: 700;
-      margin-right: 4px;
+      z-index: 10;
     }
-    .window-pills {
+    .right-sidebar-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sidebar-collapse-handle {
       display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-    .window-pill {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-      letter-spacing: 0.04em;
+      font-size: 10px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      gap: 6px;
       user-select: none;
     }
-    .window-pill:hover {
-      border-color: var(--accent-border);
+    .sidebar-collapse-handle:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+    .sidebar-section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 12px 16px 6px;
+    }
+    .sidebar-content { padding: 0; }
+    .sidebar-panel {
+      padding: 0 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-panel:last-child { border-bottom: none; }
+    .sidebar-stream-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-stream-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sev-low);
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .sidebar-stream-text {
+      font-size: 11px;
       color: var(--text-secondary);
     }
-    .window-pill.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    /* ── Live stats row ── */
-    .live-stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-    @media (max-width: 600px) { .live-stats-row { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 380px)  { .live-stats-row { grid-template-columns: 1fr; } }
-
-    /* ── Networks panel ── */
-    .networks-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 22px;
-      margin-top: 16px;
-    }
-    .networks-panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .networks-panel-title {
-      font-family: var(--heading);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-    }
-    .networks-panel-meta {
-      font-family: var(--mono);
+    .sidebar-stream-sub {
       font-size: 10px;
       color: var(--text-muted);
-      letter-spacing: 0.08em;
+      font-family: var(--mono);
     }
-    .networks-list {
+    /* Ghost placeholder bars */
+    .sidebar-ghost-bars {
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .network-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .network-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      width: 180px;
+    .ghost-bar-row { display: flex; align-items: center; gap: 10px; }
+    .ghost-bar-label { width: 70px; height: 10px; border-radius: 3px; }
+    .ghost-bar-track { flex: 1; height: 5px; border-radius: 3px; }
+    .ghost-bar-val { width: 28px; height: 10px; border-radius: 3px; }
+    .ghost { background: rgba(255,255,255,0.06); opacity: 0.25; border-radius: 3px; }
+
+    /* ── Bar chart (CSS) ── */
+    .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      width: 120px;
       flex-shrink: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      cursor: default;
     }
-    .network-bar-wrap {
+    .bar-track {
       flex: 1;
-      min-width: 80px;
       height: 6px;
       background: rgba(255,255,255,0.05);
       border-radius: 3px;
       overflow: hidden;
     }
-    .network-bar {
+    .bar-fill {
       height: 100%;
       background: var(--accent);
       border-radius: 3px;
       transition: width 0.4s ease;
     }
-    .network-count {
+    .bar-val {
       font-family: var(--mono);
       font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-      min-width: 36px;
+      color: var(--text-secondary);
+      width: 46px;
       text-align: right;
       flex-shrink: 0;
-    }
-    .network-pct {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      min-width: 38px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .networks-empty {
-      font-size: 13px;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 28px 0;
-    }
-    .networks-skeleton {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .skeleton-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .skeleton-block {
-      background: rgba(255,255,255,0.05);
-      border-radius: 4px;
-      animation: skeleton-pulse 1.4s ease-in-out infinite;
-    }
-    @keyframes skeleton-pulse {
-      0%,100% { opacity: 0.5; }
-      50%      { opacity: 1; }
     }
 
-    /* ── Live dashboard section ── */
-    .live-section {
-      margin-bottom: 56px;
-      border-top: 1px solid var(--border);
-      padding-top: 48px;
+    /* ── Simple line chart (SVG) ── */
+    .line-chart-wrap { width: 100%; overflow: hidden; }
+    .line-chart-wrap svg { display: block; }
+
+    /* ── Donut chart (SVG) ── */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 18px;
     }
-    .live-badge {
+    .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+    .donut-legend-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .donut-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Heatmap ── */
+    .heatmap-grid {
+      display: grid;
+      gap: 3px;
+    }
+    .heatmap-cell {
+      border-radius: 3px;
+      aspect-ratio: 1;
+      transition: opacity 0.2s;
+    }
+    .heatmap-cell:hover { opacity: 0.8; }
+    .heatmap-axes {
+      display: grid;
+      gap: 0;
+    }
+    .heatmap-label {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Globe canvas ── */
+    #globe-canvas {
+      display: block;
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+    }
+    .globe-wrap {
+      position: relative;
+      background: #060d1a;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .globe-legend {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      gap: 12px;
+    }
+    .globe-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .globe-legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* ── AI narrative card ── */
+    .ai-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      padding: 16px 20px;
+    }
+    .ai-card-badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
       background: var(--accent-dim);
       border: 1px solid var(--accent-border);
-      border-radius: 20px;
-      padding: 3px 10px;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .ai-card-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ── Form elements ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--surface-2);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 7px;
+      color: var(--text-primary);
+      font-family: var(--sans);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn {
+      padding: 8px 18px;
+      border-radius: 7px;
+      border: none;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #d63854; }
+    .btn-ghost {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--sev-critical); }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--sev-low);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text-primary);
+      z-index: 999;
+      animation: toast-in 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Section heading ── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: var(--heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Replay scrubber ── */
+    .scrubber-wrap {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .scrubber-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      position: relative;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .scrubber-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      width: 38%;
+      transition: width 0.1s;
+    }
+    .scrubber-ghost {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 3px;
+      background: repeating-linear-gradient(90deg, rgba(233,69,96,0.08) 0px, rgba(233,69,96,0.08) 8px, transparent 8px, transparent 16px);
+    }
+    .scrubber-thumb {
+      position: absolute;
+      top: 50%;
+      left: 38%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--accent-border);
+    }
+    .scrubber-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .speed-chips {
+      display: flex;
+      gap: 4px;
+    }
+    .speed-chip {
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .speed-chip:hover { border-color: var(--accent-border); color: var(--text-secondary); }
+    .speed-chip.active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+
+    /* ── Template cards ── */
+    .template-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .template-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .template-card:hover {
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+    .template-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+    .template-card-icon svg { width: 16px; height: 16px; }
+    .template-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .template-card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Onboarding strip ── */
+    .onboarding-strip {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .onboarding-step {
+      flex: 1;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .onboarding-step:last-child { border-right: none; }
+    .onboarding-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
       color: var(--accent);
-      letter-spacing: 0.08em;
-      margin-bottom: 16px;
+      flex-shrink: 0;
     }
-    .live-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: live-blink 1.6s ease-in-out infinite;
-    }
-    @keyframes live-blink {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.3; }
-    }
-    .connect-hint {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 16px;
+    .onboarding-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .onboarding-text strong { color: var(--text-primary); display: block; margin-bottom: 2px; }
+
+    /* ── IP rep panel ── */
+    .ip-rep-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(30,41,59,0.5);
       font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
     }
-    .connect-hint code {
+    .ip-rep-item:last-child { border-bottom: none; }
+    .ip-addr {
       font-family: var(--mono);
       font-size: 11px;
-      background: rgba(255,255,255,0.06);
-      padding: 1px 5px;
-      border-radius: 3px;
-      color: var(--accent);
+      color: var(--text-primary);
+    }
+    .ip-score {
+      font-family: var(--mono);
+      font-size: 11px;
     }
 
-    /* ── Footer ── */
-    footer {
-      margin-top: 72px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      color: var(--text-muted);
+    /* ── Grid layout helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .mb-14 { margin-bottom: 14px; }
+    .mb-20 { margin-bottom: 20px; }
+    .mt-14 { margin-top: 14px; }
+
+    /* ── Scrollable pane ── */
+    .scroll-pane {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .scroll-pane::-webkit-scrollbar { width: 5px; }
+    .scroll-pane::-webkit-scrollbar-track { background: transparent; }
+    .scroll-pane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Replay layout ── */
+    .replay-layout {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-direction: column;
+      height: 100%;
     }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    .replay-top {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
 
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .wrap { padding: 48px 18px 80px; }
-      .hero-title { font-size: 38px; }
-      .arch-flow { gap: 0; }
+    /* ── Date input ── */
+    .date-range-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
     }
-    @media (max-width: 600px) {
-      .wrap { padding: 48px 16px 64px; }
-      .network-name { width: 130px; font-size: 12px; }
+    .date-sep { font-size: 12px; color: var(--text-muted); }
+    .preset-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s;
     }
-    @media (max-width: 480px) {
-      .hero-title { font-size: 32px; }
-      .stat-num { font-size: 26px; }
-      .window-pill { padding: 5px 9px; font-size: 10px; }
-    }
-    @media (max-width: 380px) {
-      .hero-title { font-size: 28px; }
-    }
+    .preset-btn:hover { border-color: var(--accent-border); color: var(--text-secondary); }
+    .preset-btn.active { border-color: var(--accent-border); background: var(--accent-dim); color: var(--accent); }
   </style>
 </head>
 <body>
-  <div class="wrap">
 
-    <!-- Authorized use notice -->
-    <div class="notice">
-      <div class="notice-dot"></div>
-      <span><strong>Authorized use only.</strong> This dashboard is designed for monitoring systems you own or have explicit written authorization to observe. Unauthorized access to systems is illegal under the CFAA and equivalent laws globally.</span>
-    </div>
-
-    <!-- Hero -->
-    <div class="hero">
-      <p class="hero-eyebrow">// Security Dashboard</p>
-      <h1 class="hero-title">Attack<span>Map</span></h1>
-      <p class="hero-desc">
-        Real-time auth-failure geo-dashboard on Cloudflare Workers. Ingests failed
-        login attempts, scores anomalies, visualizes attack patterns across three map
-        modes, and enforces IP and geo blocks — all at the edge.
-      </p>
-      <div class="hero-stack">
-        <span class="hero-badge">TypeScript</span>
-        <span class="hero-badge">Cloudflare Workers</span>
-        <span class="hero-badge">D1</span>
-        <span class="hero-badge">Hono</span>
-        <span class="hero-badge">Next.js 15</span>
-        <span class="hero-badge">SSE</span>
-        <span class="hero-badge">Leaflet</span>
-        <span class="hero-badge">Cobe</span>
-        <span class="hero-badge">AbuseIPDB</span>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <span class="stat-num">30+</span>
-        <span class="stat-label">React components</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num">7</span>
-        <span class="stat-label">Dashboard views</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num">Edge</span>
-        <span class="stat-label">Zero cold starts</span>
-      </div>
-    </div>
-
-    <!-- Architecture -->
-    <div class="section">
-      <p class="section-label">Architecture</p>
-      <div class="arch-diagram">
-        <div class="arch-flow">
-          <div class="arch-node arch-node-accent">
-            <div class="arch-node-label">Input</div>
-            <div class="arch-node-value">Auth failure</div>
-          </div>
-          <div class="arch-arrow">→</div>
-          <div class="arch-node">
-            <div class="arch-node-label">CF Worker</div>
-            <div class="arch-node-value">Hono + TypeScript</div>
-          </div>
-          <div class="arch-arrow">→</div>
-          <div class="arch-branch">
-            <div class="arch-node">
-              <div class="arch-node-label">Persist</div>
-              <div class="arch-node-value">D1 (SQLite)</div>
-            </div>
-            <div class="arch-node">
-              <div class="arch-node-label">Cache</div>
-              <div class="arch-node-value">Workers KV</div>
-            </div>
-          </div>
-          <div class="arch-arrow">→</div>
-          <div class="arch-node">
-            <div class="arch-node-label">Stream</div>
-            <div class="arch-node-value">SSE endpoint</div>
-          </div>
-          <div class="arch-arrow">→</div>
-          <div class="arch-node arch-node-accent">
-            <div class="arch-node-label">Dashboard</div>
-            <div class="arch-node-value">Next.js 15 UI</div>
-          </div>
-        </div>
-        <p class="arch-note">
-          Enrichment (geo lookup, anomaly scoring, threat feed check) runs in
-          <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">waitUntil</code>
-          so ingestion latency is not affected. Block enforcement runs as Hono middleware on every request.
-        </p>
-      </div>
-    </div>
-
-    <!-- How it works -->
-    <div class="section">
-      <p class="section-label">How it works</p>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">01</div>
-          <div class="step-content">
-            <div class="step-title">Event ingestion</div>
-            <div class="step-body">
-              Your API sends a <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">POST /ingest</code>
-              on every rejected login. The Worker validates the payload, writes the failure to D1, and returns
-              <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">202</code>
-              immediately to keep ingestion latency under 5 ms.
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">02</div>
-          <div class="step-content">
-            <div class="step-title">Async enrichment</div>
-            <div class="step-body">
-              In <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">waitUntil</code>,
-              the Worker resolves geo coordinates (Zippopotam + U.S. Census fallback, cached in KV), assigns
-              an anomaly score (0–100), checks the IP against Spamhaus DROP and CINS Army threat feeds, and
-              evaluates active alert rules.
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">03</div>
-          <div class="step-content">
-            <div class="step-title">Live streaming to the dashboard</div>
-            <div class="step-body">
-              The dashboard holds an open Server-Sent Events connection. New events appear within seconds.
-              KV-backed dedup prevents duplicate delivery on reconnect. The dashboard updates all seven
-              views — map, log, stats, intel — without a page refresh.
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">04</div>
-          <div class="step-content">
-            <div class="step-title">Investigate &amp; respond</div>
-            <div class="step-body">
-              Probe any IP for AbuseIPDB reputation data directly from the log view. Block a single IP or
-              an entire country with optional expiry — the rule is written to D1 and the KV fast-path cache.
-              Blocked IPs are rejected by Hono middleware before reaching any route handler.
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">05</div>
-          <div class="step-content">
-            <div class="step-title">Analyze patterns</div>
-            <div class="step-body">
-              The Stats view surfaces an attack heatmap (day-of-week × hour grid), time-series chart,
-              per-route breakdown, and failure reason distribution. The Intel view delivers an automated
-              threat analysis report cached for five minutes.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dashboard views -->
-    <div class="section">
-      <p class="section-label">Dashboard Views</p>
-      <div class="table-scroll">
-      <table class="views-table">
-        <thead>
-          <tr>
-            <th>View</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Map</td>
-            <td>Three switchable modes: command canvas (SVG attack arcs), interactive Leaflet map with country clustering, and WebGL Cobe 3D globe with attack density coloring.</td>
-          </tr>
-          <tr>
-            <td>Log</td>
-            <td>Filterable real-time event table with anomaly score badges. Filter by country, route, failure reason, or anomaly tier. One-click IP probe and block from any row.</td>
-          </tr>
-          <tr>
-            <td>Intel</td>
-            <td>Automated threat analysis report (top patterns, top countries, top targeted routes, recommended mitigations). Threat feed correlation results for matched IPs.</td>
-          </tr>
-          <tr>
-            <td>Stats</td>
-            <td>Attack frequency heatmap by day-of-week and hour. Time-series chart, per-route breakdown, failure reason distribution — all built with recharts.</td>
-          </tr>
-          <tr>
-            <td>Blocklist</td>
-            <td>Manage active IP and country blocks. Add, remove, or set expiry on any entry. Changes take effect on the next Worker request via KV cache invalidation.</td>
-          </tr>
-          <tr>
-            <td>Rules</td>
-            <td>Full CRUD for alert rules. Define brute-force thresholds (N failures in T seconds from one IP) or anomaly score thresholds. Rules evaluated on every ingested event.</td>
-          </tr>
-          <tr>
-            <td>Replay</td>
-            <td>Scrub through a time window and replay attack patterns frame-by-frame on the map. Speed control and frame counter. Useful for incident reconstruction.</td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-    </div>
-
-    <!-- Features -->
-    <div class="section">
-      <p class="section-label">Features</p>
-      <div class="features">
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Anomaly scoring engine</div>
-          <div class="feature-body">
-            Every event receives a 0–100 score and pattern classification:
-            brute_force, credential_stuffing, rate_probe, tor_exit, known_bad_ip, bot, geo_concentration.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Three map modes</div>
-          <div class="feature-body">
-            Switch between a command canvas with animated attack arcs, a Leaflet interactive tile map, and a Cobe WebGL 3D globe — without leaving the view.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">IP deep probe</div>
-          <div class="feature-body">
-            One-click AbuseIPDB enrichment with confidence score, abuse categories, reverse-lookup hostname, and ISP. API key never leaves the Worker.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Edge-enforced blocking</div>
-          <div class="feature-body">
-            IP and country blocks written in the dashboard are enforced by Hono middleware on every Worker request. Sub-millisecond enforcement via Workers KV fast path.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Alert rules</div>
-          <div class="feature-body">
-            CRUD interface for threshold-based alert rules. Brute-force (N failures/T seconds) and anomaly score triggers. Cooldown prevents alert storms from the same source.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Threat feed correlation</div>
-          <div class="feature-body">
-            Ingested IPs checked against Spamhaus DROP and CINS Army known-bad lists. Matches flagged inline — no separate scan required.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Share tokens</div>
-          <div class="feature-body">
-            Generate a time-limited public link showing aggregate stats (event count, top countries, top routes). Raw IPs and individual events are never exposed.
-          </div>
-        </div>
-        <div class="feature">
-          <div class="feature-marker"></div>
-          <div class="feature-title">Export &amp; backfill</div>
-          <div class="feature-body">
-            CSV or JSON export (up to 10,000 rows). Geo backfill endpoint resolves coordinates for historic events ingested without location data.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tech stack -->
-    <div class="section">
-      <p class="section-label">Stack</p>
-      <div class="stack-grid">
-        <div class="stack-row">
-          <span class="stack-layer">Runtime</span>
-          <span class="stack-tech">Cloudflare Workers</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Database</span>
-          <span class="stack-tech">D1 — SQLite at the edge</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Backend</span>
-          <span class="stack-tech">Hono · TypeScript</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Frontend</span>
-          <span class="stack-tech">Next.js 15 (App Router)</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Map</span>
-          <span class="stack-tech">Leaflet · Cobe (WebGL)</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Charts</span>
-          <span class="stack-tech">recharts · framer-motion</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Streaming</span>
-          <span class="stack-tech">Server-Sent Events</span>
-        </div>
-        <div class="stack-row">
-          <span class="stack-layer">Enrichment</span>
-          <span class="stack-tech">AbuseIPDB · Spamhaus · CINS</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Key engineering decisions -->
-    <div class="section">
-      <p class="section-label">Engineering Decisions</p>
-      <div class="callouts">
-        <div class="callout">
-          <div class="callout-title">Edge-native — no separate server layer</div>
-          <div class="callout-body">
-            Every operation (ingestion, SSE streaming, block enforcement, geo lookup) runs inside a Cloudflare
-            Worker. No Node.js server, no external database host, no proxy layer to maintain. Cold starts are
-            structurally impossible on Cloudflare's edge network.
-          </div>
-        </div>
-        <div class="callout">
-          <div class="callout-title">SSE over WebSockets</div>
-          <div class="callout-body">
-            Auth-failure data flows in one direction (server → browser). SSE uses standard HTTP/2 multiplexing,
-            requires no special protocol negotiation, and avoids the Durable Objects requirement that full-duplex
-            WebSocket connections impose on CF Workers. Reconnect behavior is handled automatically by the browser.
-          </div>
-        </div>
-        <div class="callout">
-          <div class="callout-title"><code>waitUntil</code>-deferred enrichment</div>
-          <div class="callout-body">
-            Geo resolution, anomaly scoring, alert evaluation, and KV cache writes all run in <code>waitUntil</code>.
-            The <code>POST /ingest</code> endpoint returns <code>202</code> immediately — enrichment completes
-            asynchronously within the same Worker invocation without adding latency to the write path.
-          </div>
-        </div>
-        <div class="callout">
-          <div class="callout-title">Block enforcement as middleware</div>
-          <div class="callout-body">
-            IP and geo blocks are enforced by a Hono middleware reading from a Workers KV fast-path cache (D1
-            fallback on miss). No external firewall, no WAF rule propagation delay. A blocked IP is rejected
-            before it reaches any route handler on every Worker request.
-          </div>
-        </div>
-        <div class="callout">
-          <div class="callout-title">Anomaly scoring at ingestion time</div>
-          <div class="callout-body">
-            Scoring runs inline on write (or in <code>waitUntil</code> for slower heuristics). Every event in
-            D1 already carries its score and pattern classification. The dashboard never computes scores on the
-            read path — queries are simple column reads.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Security architecture -->
-    <div class="section">
-      <p class="section-label">Security Architecture</p>
-      <div class="security-grid">
-        <div class="sec-card">
-          <div class="sec-card-title">Admin auth</div>
-          <div class="sec-card-body">
-            All admin endpoints require a pre-shared bearer token validated via Web Crypto
-            <code style="font-family:var(--mono);font-size:11px">timingSafeEqual</code>.
-            No tokens are evaluated by string comparison.
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">Block enforcement</div>
-          <div class="sec-card-body">
-            Blocking middleware sits at the first Hono layer. Blocked IPs and country codes are
-            rejected before reaching any route handler. KV cache keeps enforcement under 1 ms.
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">Share token scoping</div>
-          <div class="sec-card-body">
-            Public share tokens expose aggregate statistics only. Raw IPs and individual event
-            records are never returned on share token responses.
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">API key proxying</div>
-          <div class="sec-card-body">
-            AbuseIPDB enrichment calls are proxied through the Worker. The API key is a Worker
-            secret — it is never sent to the browser or exposed in any client response.
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">CSRF protection</div>
-          <div class="sec-card-body">
-            CSRF tokens required on all state-mutating endpoints (POST, PUT, DELETE).
-            Token validated server-side on every write path.
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">KV dedup hardening</div>
-          <div class="sec-card-body">
-            SSE dedup keys use a salted hash of the event ID, not the raw IP, to prevent
-            KV namespace enumeration. Alert cooldown prevents alert storms from repeated events.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Dashboard — Time-Window Selector + Stats + Networks Panel -->
-    <div class="live-section">
-      <div class="live-badge"><div class="live-dot"></div>Live Dashboard</div>
-      <h2 class="section-title">Real-Time Threat Overview</h2>
-      <p class="section-body" style="margin-bottom:24px;">
-        Connect this panel to a running AttackMap backend to display live auth-failure statistics
-        and top offending networks. Configure <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">CONFIG.BASE_URL</code>
-        and <code style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)">CONFIG.ADMIN_KEY</code> below to activate.
-      </p>
-
-      <div class="connect-hint">
-        Set <code>CONFIG.BASE_URL</code> and <code>CONFIG.ADMIN_KEY</code> in the script block at the bottom of this
-        file to connect to your backend. Leave empty to display placeholder values.
-      </div>
-
-      <!-- Feature #8: Time-window selector -->
-      <div class="window-controls">
-        <span class="window-label">Window</span>
-        <div class="window-pills">
-          <button class="window-pill" data-window="1h">1h</button>
-          <button class="window-pill" data-window="6h">6h</button>
-          <button class="window-pill active" data-window="24h">24h</button>
-          <button class="window-pill" data-window="7d">7d</button>
-          <button class="window-pill" data-window="30d">30d</button>
-        </div>
-      </div>
-
-      <!-- Live stats cards -->
-      <div class="live-stats-row" id="live-stats-row">
-        <div class="stat-card">
-          <span class="stat-num" id="stat-total">–</span>
-          <span class="stat-label">Total failures</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-num" id="stat-critical">–</span>
-          <span class="stat-label">Critical events</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-num" id="stat-countries">–</span>
-          <span class="stat-label">Countries</span>
-        </div>
-      </div>
-
-      <!-- Feature #7: Top Offending Networks -->
-      <p class="section-label">Top Offending Networks</p>
-      <div class="networks-panel" id="networks-panel">
-        <div class="networks-panel-header">
-          <span class="networks-panel-title">Top Offending Networks</span>
-          <span class="networks-panel-meta" id="networks-meta">window: 24h</span>
-        </div>
-        <div id="networks-body">
-          <div class="networks-skeleton" id="networks-skeleton">
-            <div class="skeleton-row">
-              <div class="skeleton-block" style="width:140px;height:13px;"></div>
-              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
-              <div class="skeleton-block" style="width:34px;height:11px;"></div>
-            </div>
-            <div class="skeleton-row">
-              <div class="skeleton-block" style="width:110px;height:13px;"></div>
-              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
-              <div class="skeleton-block" style="width:28px;height:11px;"></div>
-            </div>
-            <div class="skeleton-row">
-              <div class="skeleton-block" style="width:160px;height:13px;"></div>
-              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
-              <div class="skeleton-block" style="width:22px;height:11px;"></div>
-            </div>
-            <div class="skeleton-row">
-              <div class="skeleton-block" style="width:125px;height:13px;"></div>
-              <div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;"></div>
-              <div class="skeleton-block" style="width:30px;height:11px;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      <span>AttackMap — Cloudflare Workers geo-dashboard</span>
-      <a href="https://github.com/DevCraftXCoder/AttackMap">View on GitHub</a>
-    </footer>
-
+  <!-- Warning banner (shown when WARNING_ACTIVE = true) -->
+  <div class="warning-banner" id="warning-banner">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <span class="warning-banner-text">Elevated threat activity detected — 3 IPs breached brute-force threshold in the last 15 minutes. Review the Event Feed for details.</span>
+    <button class="warning-banner-close" onclick="document.getElementById('warning-banner').classList.remove('active')">×</button>
   </div>
+
+  <div class="app-shell">
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-brand">Attack<span>Map</span></div>
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" data-tab="live-map" role="tab" aria-selected="true">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+          Live Map
+        </button>
+        <button class="tab-btn" data-tab="event-feed" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Event Feed
+        </button>
+        <button class="tab-btn" data-tab="threat-intel" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.007-.13-1.985-.382-2.916z"/></svg>
+          Threat Intel
+        </button>
+        <button class="tab-btn" data-tab="statistics" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Statistics
+        </button>
+        <button class="tab-btn" data-tab="blocklist" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          Blocklist
+        </button>
+        <button class="tab-btn" data-tab="rules" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          Rules
+        </button>
+        <button class="tab-btn" data-tab="replay" role="tab">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Replay
+        </button>
+      </div>
+      <div class="topbar-right">
+        <div class="stream-status">
+          <div class="stream-dot"></div>
+          <span>ARMED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main area -->
+    <div class="main-area">
+
+      <!-- ─────────── TAB 1: LIVE MAP ─────────── -->
+      <div class="tab-pane active" id="tab-live-map">
+        <div class="filter-bar">
+          <div class="filter-pills">
+            <span class="pill active" data-filter-group="window" data-val="1h">1h</span>
+            <span class="pill" data-filter-group="window" data-val="6h">6h</span>
+            <span class="pill" data-filter-group="window" data-val="24h">24h</span>
+            <span class="pill" data-filter-group="window" data-val="7d">7d</span>
+          </div>
+          <div class="filter-divider"></div>
+          <select class="filter-select"><option>All Regions</option><option>Asia Pacific</option><option>Europe</option><option>North America</option><option>South America</option></select>
+          <select class="filter-select"><option>All Severity</option><option>Critical</option><option>High</option><option>Medium</option></select>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="Refresh">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+          <button class="icon-btn" data-tip="Export">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
+          </button>
+        </div>
+        <div class="content-with-sidebar">
+          <div class="content-main">
+            <!-- Stat cards -->
+            <div class="stat-cards mb-20">
+              <div class="stat-card">
+                <div class="stat-card-label">Total Failures</div>
+                <div class="stat-card-value">14,872</div>
+                <div class="stat-card-delta neg">+12.3% vs prev window</div>
+                <div class="stat-card-meta">last 24h</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Critical Events</div>
+                <div class="stat-card-value">247</div>
+                <div class="stat-card-delta neg">+8 in last hour</div>
+                <div class="stat-card-meta">anomaly ≥ 80</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Countries</div>
+                <div class="stat-card-value">38</div>
+                <div class="stat-card-delta">+2 new</div>
+                <div class="stat-card-meta">unique origins</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">IPs Blocked</div>
+                <div class="stat-card-value">1,104</div>
+                <div class="stat-card-delta">+22 today</div>
+                <div class="stat-card-meta">active blocks</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Avg Anomaly</div>
+                <div class="stat-card-value">54</div>
+                <div class="stat-card-delta neg">↑ from 47</div>
+                <div class="stat-card-meta">score 0–100</div>
+              </div>
+            </div>
+            <!-- Globe -->
+            <div class="globe-wrap mb-14">
+              <canvas id="globe-canvas" height="340"></canvas>
+              <div class="globe-legend">
+                <div class="globe-legend-item">
+                  <div class="globe-legend-dot" style="background:#475569"></div>
+                  <span>Node</span>
+                </div>
+                <div class="globe-legend-item">
+                  <div class="globe-legend-dot" style="background:var(--accent)"></div>
+                  <span>Attack arc</span>
+                </div>
+                <div class="globe-legend-item">
+                  <div class="globe-legend-dot" style="background:#ef4444"></div>
+                  <span>Critical</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <div class="sidebar-stream-status">
+              <div class="sidebar-stream-dot"></div>
+              <div>
+                <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <div class="sidebar-stream-sub" id="sidebar-last-scan">Last scan: just now</div>
+              </div>
+            </div>
+            <div class="sidebar-content">
+              <div class="sidebar-section-label">Top Attackers</div>
+              <div class="sidebar-panel">
+                <div class="bar-chart" id="sidebar-top-ips">
+                  <div class="bar-row">
+                    <div class="bar-label mono" style="font-size:11px">CN / 45.142.212.x</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:82%"></div></div>
+                    <div class="bar-val">1,240</div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label mono" style="font-size:11px">RU / 185.220.101.x</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:64%"></div></div>
+                    <div class="bar-val">963</div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label mono" style="font-size:11px">IN / 103.88.45.x</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:47%"></div></div>
+                    <div class="bar-val">712</div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label mono" style="font-size:11px">US / 198.54.117.x</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:33%"></div></div>
+                    <div class="bar-val">501</div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label mono" style="font-size:11px">BR / 177.93.11.x</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:24%"></div></div>
+                    <div class="bar-val">364</div>
+                  </div>
+                </div>
+              </div>
+              <div class="sidebar-section-label">Evidence</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px;color:var(--text-muted)">EVIDENCE</div>
+              <div class="sidebar-panel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select any event or IP to see enrichment data here.</div>
+                <div class="sidebar-ghost-bars">
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 2: EVENT FEED ─────────── -->
+      <div class="tab-pane" id="tab-event-feed">
+        <div class="filter-bar">
+          <div class="filter-pills">
+            <span class="pill active" data-filter-group="feed-window" data-val="live">Live</span>
+            <span class="pill" data-filter-group="feed-window" data-val="1h">1h</span>
+            <span class="pill" data-filter-group="feed-window" data-val="6h">6h</span>
+            <span class="pill" data-filter-group="feed-window" data-val="24h">24h</span>
+          </div>
+          <div class="filter-divider"></div>
+          <select class="filter-select" id="feed-severity-filter">
+            <option value="">All Severity</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="med">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select class="filter-select">
+            <option>All Routes</option>
+            <option>/api/auth/login</option>
+            <option>/api/auth/token</option>
+            <option>/admin</option>
+          </select>
+          <div class="filter-divider"></div>
+          <span class="pill" style="cursor:default;background:rgba(233,69,96,0.1);border-color:var(--accent-border);color:var(--accent)">● Credential Stuffing</span>
+          <span class="pill" style="cursor:default;background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.3);color:var(--sev-high)">▲ Brute Force</span>
+          <span class="pill" style="cursor:default;background:rgba(234,179,8,0.1);border-color:rgba(234,179,8,0.3);color:var(--sev-med)">◆ Rate Probe</span>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="Pause stream">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M10 9v6m4-6v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </button>
+          <button class="icon-btn" data-tip="Export CSV">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
+          </button>
+        </div>
+        <div class="content-with-sidebar">
+          <div class="content-main">
+            <!-- Charts row -->
+            <div class="grid-2 mb-14">
+              <div class="card">
+                <div class="card-title">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Events Over Time
+                </div>
+                <div class="line-chart-wrap" id="event-timeline-chart"></div>
+              </div>
+              <div class="card">
+                <div class="card-title">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                  Severity Distribution
+                </div>
+                <div class="donut-wrap" id="severity-donut-wrap"></div>
+              </div>
+            </div>
+            <!-- IP Reputation panel -->
+            <div class="card mb-14">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                IP Reputation — AbuseIPDB
+              </div>
+              <div id="ip-rep-list">
+                <div class="ip-rep-item">
+                  <span class="ip-addr">45.142.212.18</span>
+                  <span class="sev-badge sev-critical" aria-label="Critical severity: ▲ Critical">▲ 98 / 100</span>
+                </div>
+                <div class="ip-rep-item">
+                  <span class="ip-addr">185.220.101.47</span>
+                  <span class="sev-badge sev-high" aria-label="High severity: ● High">● 87 / 100</span>
+                </div>
+                <div class="ip-rep-item">
+                  <span class="ip-addr">103.88.45.201</span>
+                  <span class="sev-badge sev-high" aria-label="High severity: ● High">● 72 / 100</span>
+                </div>
+                <div class="ip-rep-item">
+                  <span class="ip-addr">198.54.117.66</span>
+                  <span class="sev-badge sev-med" aria-label="Medium severity: ◆ Med">◆ 41 / 100</span>
+                </div>
+                <div class="ip-rep-item">
+                  <span class="ip-addr">177.93.11.83</span>
+                  <span class="sev-badge sev-low" aria-label="Low severity: ■ Low">■ 12 / 100</span>
+                </div>
+              </div>
+            </div>
+            <!-- Recent critical events -->
+            <div class="card">
+              <div class="section-head">
+                <div class="card-title" style="margin-bottom:0">Recent Critical Events</div>
+                <span class="sev-badge sev-critical" aria-label="Critical">▲ CRITICAL</span>
+              </div>
+              <div style="margin-top:12px">
+              <table class="data-table" id="critical-events-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>IP Address</th>
+                    <th>Country</th>
+                    <th>Route</th>
+                    <th>Reason</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="critical-events-body"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <div class="sidebar-stream-status">
+              <div class="sidebar-stream-dot"></div>
+              <div>
+                <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <div class="sidebar-stream-sub">SSE connected · 2s ago</div>
+              </div>
+            </div>
+            <div class="sidebar-content">
+              <div class="sidebar-section-label">Top Routes Targeted</div>
+              <div class="sidebar-panel">
+                <div class="bar-chart">
+                  <div class="bar-row"><div class="bar-label">/api/auth/login</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">8,241</div></div>
+                  <div class="bar-row"><div class="bar-label">/api/auth/token</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">5,012</div></div>
+                  <div class="bar-row"><div class="bar-label">/admin</div><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><div class="bar-val">2,748</div></div>
+                  <div class="bar-row"><div class="bar-label">/api/reset</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">1,390</div></div>
+                </div>
+              </div>
+              <div class="sidebar-section-label">Evidence</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-panel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to inspect the IP.</div>
+                <div class="sidebar-ghost-bars">
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 3: THREAT INTEL ─────────── -->
+      <div class="tab-pane" id="tab-threat-intel">
+        <div class="filter-bar">
+          <select class="filter-select"><option>All Patterns</option><option>Credential Stuffing</option><option>Brute Force</option><option>Rate Probe</option><option>Tor Exit</option></select>
+          <select class="filter-select"><option>All Time</option><option>Last 24h</option><option>Last 7d</option><option>Last 30d</option></select>
+          <select class="filter-select"><option>All Regions</option><option>Asia Pacific</option><option>Europe</option><option>Americas</option></select>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="Refresh intel">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+        <div class="content-with-sidebar">
+          <div class="content-main">
+            <!-- AI narrative -->
+            <div class="ai-card mb-14">
+              <div class="ai-card-badge">✦ AI Analysis</div>
+              <div class="ai-card-text">
+                Over the last 24 hours, <strong style="color:var(--text-primary)">credential stuffing</strong> accounted for 62% of all auth failures — a 14% increase vs. the prior window. The majority of activity originates from three ASNs (AS3462 Chunghwa, AS4134 ChinaTelecom, AS209588 Flyservers) executing distributed low-rate attempts across 1,200+ IPs to evade brute-force thresholds.
+                <br><br>
+                <strong style="color:var(--text-primary)">Recommendation:</strong> Apply geo-block to CN/RU for the <code style="color:var(--accent)">/api/auth/login</code> route or lower the brute-force threshold from 20 to 10 failures per 60s on these ASNs. Threat feed correlation matched 183 IPs against Spamhaus DROP — consider auto-blocking on match.
+              </div>
+            </div>
+            <!-- Threat pattern table -->
+            <div class="card">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                Threat Patterns
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Pattern</th>
+                    <th>Events (24h)</th>
+                    <th>Unique IPs</th>
+                    <th>Top Country</th>
+                    <th>Trend</th>
+                    <th>Risk</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span style="color:var(--text-primary);font-weight:600">● Credential Stuffing</span></td>
+                    <td class="mono">9,220</td>
+                    <td class="mono">1,247</td>
+                    <td>China (CN)</td>
+                    <td style="color:var(--sev-critical)">↑ +14%</td>
+                    <td><span class="sev-badge sev-critical" aria-label="Critical risk: ▲ Critical">▲ Critical</span></td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:var(--text-primary);font-weight:600">▲ Brute Force</span></td>
+                    <td class="mono">3,411</td>
+                    <td class="mono">88</td>
+                    <td>Russia (RU)</td>
+                    <td style="color:var(--sev-high)">↑ +8%</td>
+                    <td><span class="sev-badge sev-high" aria-label="High risk: ▲ High">▲ High</span></td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:var(--text-primary);font-weight:600">◆ Rate Probe</span></td>
+                    <td class="mono">1,580</td>
+                    <td class="mono">312</td>
+                    <td>India (IN)</td>
+                    <td style="color:var(--sev-med)">→ stable</td>
+                    <td><span class="sev-badge sev-med" aria-label="Medium risk: ◆ Med">◆ Med</span></td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:var(--text-primary);font-weight:600">■ Tor Exit Node</span></td>
+                    <td class="mono">498</td>
+                    <td class="mono">71</td>
+                    <td>Netherlands (NL)</td>
+                    <td style="color:var(--sev-low)">↓ -3%</td>
+                    <td><span class="sev-badge sev-low" aria-label="Low risk: ■ Low">■ Low</span></td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:var(--text-primary);font-weight:600">◆ Geo Concentration</span></td>
+                    <td class="mono">163</td>
+                    <td class="mono">14</td>
+                    <td>Brazil (BR)</td>
+                    <td style="color:var(--sev-low)">↓ -19%</td>
+                    <td><span class="sev-badge sev-low" aria-label="Low risk: ■ Low">■ Low</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <div class="sidebar-stream-status">
+              <div class="sidebar-stream-dot"></div>
+              <div>
+                <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <div class="sidebar-stream-sub">Intel cache: 5 min TTL</div>
+              </div>
+            </div>
+            <div class="sidebar-content">
+              <div class="sidebar-section-label">Feed Correlations</div>
+              <div class="sidebar-panel">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Spamhaus DROP matches</span><span class="mono" style="color:var(--sev-critical)">183</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>CINS Army matches</span><span class="mono" style="color:var(--sev-high)">47</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>AbuseIPDB flagged</span><span class="mono" style="color:var(--sev-med)">512</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Tor exit nodes</span><span class="mono" style="color:var(--text-muted)">71</span></div>
+                </div>
+              </div>
+              <div class="sidebar-section-label">Evidence</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-panel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a pattern to see correlated IPs.</div>
+                <div class="sidebar-ghost-bars">
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 4: STATISTICS ─────────── -->
+      <div class="tab-pane" id="tab-statistics">
+        <div class="filter-bar">
+          <div class="filter-pills">
+            <span class="pill" data-filter-group="stats-window" data-val="24h">24h</span>
+            <span class="pill active" data-filter-group="stats-window" data-val="7d">7d</span>
+            <span class="pill" data-filter-group="stats-window" data-val="30d">30d</span>
+          </div>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="Export data">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
+          </button>
+        </div>
+        <div class="content-with-sidebar">
+          <div class="content-main">
+            <!-- Attack heatmap -->
+            <div class="card mb-14">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                Attack Heatmap — Day × Hour
+              </div>
+              <div id="heatmap-container" style="margin-top:8px"></div>
+            </div>
+            <!-- Route breakdown + Country breakdown -->
+            <div class="grid-2 mb-14">
+              <div class="card">
+                <div class="card-title">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  Route Breakdown
+                </div>
+                <div class="bar-chart">
+                  <div class="bar-row"><div class="bar-label">/api/auth/login</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">55.4%</div></div>
+                  <div class="bar-row"><div class="bar-label">/api/auth/token</div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><div class="bar-val">33.7%</div></div>
+                  <div class="bar-row"><div class="bar-label">/admin</div><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><div class="bar-val">6.8%</div></div>
+                  <div class="bar-row"><div class="bar-label">/api/reset</div><div class="bar-track"><div class="bar-fill" style="width:7%"></div></div><div class="bar-val">4.1%</div></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-title">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                  Failure Reason
+                </div>
+                <div class="bar-chart">
+                  <div class="bar-row"><div class="bar-label">wrong_password</div><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="bar-val">46.8%</div></div>
+                  <div class="bar-row"><div class="bar-label">user_not_found</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">33.0%</div></div>
+                  <div class="bar-row"><div class="bar-label">account_locked</div><div class="bar-track"><div class="bar-fill" style="width:22%"></div></div><div class="bar-val">13.2%</div></div>
+                  <div class="bar-row"><div class="bar-label">token_expired</div><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><div class="bar-val">7.0%</div></div>
+                </div>
+              </div>
+            </div>
+            <!-- Country breakdown -->
+            <div class="card">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                Country Breakdown
+              </div>
+              <div class="bar-chart">
+                <div class="bar-row"><div class="bar-label">China (CN)</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="bar-val">5,320</div></div>
+                <div class="bar-row"><div class="bar-label">Russia (RU)</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">3,741</div></div>
+                <div class="bar-row"><div class="bar-label">India (IN)</div><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><div class="bar-val">2,602</div></div>
+                <div class="bar-row"><div class="bar-label">United States (US)</div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><div class="bar-val">1,748</div></div>
+                <div class="bar-row"><div class="bar-label">Brazil (BR)</div><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><div class="bar-val">1,121</div></div>
+                <div class="bar-row"><div class="bar-label">Netherlands (NL)</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-val">609</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <div class="sidebar-stream-status">
+              <div class="sidebar-stream-dot"></div>
+              <div>
+                <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <div class="sidebar-stream-sub">Stats window: 7 days</div>
+              </div>
+            </div>
+            <div class="sidebar-content">
+              <div class="sidebar-section-label">Quick Summary</div>
+              <div class="sidebar-panel">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Peak hour</span><span class="mono">03:00 UTC</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Peak day</span><span class="mono">Tuesday</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Avg/hour</span><span class="mono">619</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Max/hour</span><span class="mono">2,841</span></div>
+                </div>
+              </div>
+              <div class="sidebar-section-label">Evidence</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-panel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click a chart cell to drill down.</div>
+                <div class="sidebar-ghost-bars">
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 5: BLOCKLIST ─────────── -->
+      <div class="tab-pane" id="tab-blocklist">
+        <div class="filter-bar">
+          <select class="filter-select"><option>IP Blocks</option><option>Country Blocks</option><option>All</option></select>
+          <select class="filter-select"><option>Active Only</option><option>Expired</option><option>All</option></select>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="Refresh list">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+        <div class="content-with-sidebar">
+          <div class="content-main">
+            <!-- Block IP form -->
+            <div class="card mb-14">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                Block an IP
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">IP Address or CIDR</label>
+                  <input class="form-input" type="text" placeholder="e.g. 45.142.212.0/24" id="block-ip-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">TTL</label>
+                  <select class="form-select" id="block-ttl-select">
+                    <option value="3600">1 hour</option>
+                    <option value="86400" selected>24 hours</option>
+                    <option value="604800">7 days</option>
+                    <option value="2592000">30 days</option>
+                    <option value="0">Permanent</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <input class="form-input" type="text" placeholder="e.g. Brute force — 300 failures in 5min" id="block-reason-input" />
+              </div>
+              <button class="btn btn-primary" onclick="handleBlockIP()">Add Block</button>
+            </div>
+            <!-- Blocklist table -->
+            <div class="card">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Active Blocks
+                <span style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--text-muted)">1,104 entries</span>
+              </div>
+              <div style="overflow-x:auto">
+              <table class="data-table" id="blocklist-table">
+                <thead>
+                  <tr>
+                    <th>IP / CIDR</th>
+                    <th>Type</th>
+                    <th>Reason</th>
+                    <th>Blocked At</th>
+                    <th>Expires</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="blocklist-body"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <div class="sidebar-stream-status">
+              <div class="sidebar-stream-dot"></div>
+              <div>
+                <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <div class="sidebar-stream-sub">KV cache synced</div>
+              </div>
+            </div>
+            <div class="sidebar-content">
+              <div class="sidebar-section-label">Block Summary</div>
+              <div class="sidebar-panel">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Active IP blocks</span><span class="mono">1,049</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Country blocks</span><span class="mono">3</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>CIDR ranges</span><span class="mono">52</span></div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Expiring today</span><span class="mono" style="color:var(--sev-med)">18</span></div>
+                </div>
+              </div>
+              <div class="sidebar-section-label">Evidence</div>
+              <div class="sidebar-section-label" style="padding-top:6px;font-size:9px">EVIDENCE</div>
+              <div class="sidebar-panel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a block entry to see history.</div>
+                <div class="sidebar-ghost-bars">
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 6: RULES ─────────── -->
+      <div class="tab-pane" id="tab-rules">
+        <div class="filter-bar">
+          <div class="filter-pills">
+            <span class="pill active" data-filter-group="rules-filter" data-val="all">All</span>
+            <span class="pill" data-filter-group="rules-filter" data-val="active">Active</span>
+            <span class="pill" data-filter-group="rules-filter" data-val="disabled">Disabled</span>
+          </div>
+          <div class="filter-spacer"></div>
+          <button class="icon-btn" data-tip="New rule" onclick="document.getElementById('rule-form-card').scrollIntoView({behavior:'smooth'})">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+          </button>
+        </div>
+        <div class="content-main" style="flex:1;overflow-y:auto">
+          <!-- Onboarding strip -->
+          <div class="onboarding-strip">
+            <div class="onboarding-step">
+              <div class="onboarding-num">1</div>
+              <div class="onboarding-text"><strong>Choose a template</strong> Select a starter rule or start from scratch below.</div>
+            </div>
+            <div class="onboarding-step">
+              <div class="onboarding-num">2</div>
+              <div class="onboarding-text"><strong>Configure thresholds</strong> Set failure count, time window, and anomaly score trigger.</div>
+            </div>
+            <div class="onboarding-step">
+              <div class="onboarding-num">3</div>
+              <div class="onboarding-text"><strong>Save &amp; activate</strong> Rule evaluates on every ingested event with no latency added.</div>
+            </div>
+          </div>
+          <!-- Template cards -->
+          <div class="template-cards mb-20">
+            <div class="template-card" onclick="applyTemplate('brute')">
+              <div class="template-card-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div class="template-card-title">Brute Force</div>
+              <div class="template-card-desc">20 failures from one IP within 60 seconds → alert + optional block</div>
+            </div>
+            <div class="template-card" onclick="applyTemplate('stuffing')">
+              <div class="template-card-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+              </div>
+              <div class="template-card-title">Credential Stuffing</div>
+              <div class="template-card-desc">100+ unique users from one IP in 300s → flag as stuffing attack</div>
+            </div>
+            <div class="template-card" onclick="applyTemplate('anomaly')">
+              <div class="template-card-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              </div>
+              <div class="template-card-title">High Anomaly Score</div>
+              <div class="template-card-desc">Anomaly score ≥ 80 on any single event → immediate alert</div>
+            </div>
+          </div>
+          <!-- Rules table -->
+          <div class="card mb-14">
+            <div class="card-title">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+              Active Rules
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Trigger</th>
+                  <th>Action</th>
+                  <th>Status</th>
+                  <th>Fires (24h)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rules-table-body">
+                <tr>
+                  <td style="color:var(--text-primary);font-weight:600">Brute Force Alert</td>
+                  <td><span class="sev-badge sev-high">▲ Threshold</span></td>
+                  <td class="mono">20 fail / 60s / IP</td>
+                  <td>Alert + Block</td>
+                  <td><span class="sev-badge sev-low">■ Active</span></td>
+                  <td class="mono">14</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color:var(--text-primary);font-weight:600">Stuffing Detector</td>
+                  <td><span class="sev-badge sev-critical">▲ Pattern</span></td>
+                  <td class="mono">100 users / 300s / IP</td>
+                  <td>Alert</td>
+                  <td><span class="sev-badge sev-low">■ Active</span></td>
+                  <td class="mono">3</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color:var(--text-primary);font-weight:600">High Anomaly</td>
+                  <td><span class="sev-badge sev-med">◆ Score</span></td>
+                  <td class="mono">score ≥ 80 / event</td>
+                  <td>Alert</td>
+                  <td><span class="sev-badge sev-low">■ Active</span></td>
+                  <td class="mono">31</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- New rule form -->
+          <div class="card" id="rule-form-card">
+            <div class="card-title">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+              New Rule
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Rule Name</label>
+                <input class="form-input" type="text" id="rule-name" placeholder="e.g. Brute Force Alert" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rule Type</label>
+                <select class="form-select" id="rule-type">
+                  <option>Threshold (N failures / T seconds)</option>
+                  <option>Anomaly Score</option>
+                  <option>Geo Concentration</option>
+                  <option>Pattern Match</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Threshold Count</label>
+                <input class="form-input" type="number" id="rule-count" value="20" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Window (seconds)</label>
+                <input class="form-input" type="number" id="rule-window" value="60" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Action</label>
+                <select class="form-select" id="rule-action">
+                  <option>Alert Only</option>
+                  <option>Alert + Block IP</option>
+                  <option>Alert + Block Country</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cooldown (seconds)</label>
+                <input class="form-input" type="number" id="rule-cooldown" value="300" />
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="handleSaveRule()">Save Rule</button>
+              <button class="btn btn-ghost" onclick="clearRuleForm()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── TAB 7: REPLAY ─────────── -->
+      <div class="tab-pane" id="tab-replay">
+        <div class="replay-layout">
+          <div class="replay-top">
+            <!-- Date range -->
+            <div class="card mb-14">
+              <div class="card-title">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Select Time Range
+              </div>
+              <div class="date-range-row">
+                <input type="date" class="form-input" style="width:auto" value="2026-06-08" id="replay-start" />
+                <span class="date-sep">→</span>
+                <input type="date" class="form-input" style="width:auto" value="2026-06-15" id="replay-end" />
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="preset-btn active" onclick="setReplayPreset(this,'24h')">Last 24h</button>
+                <button class="preset-btn" onclick="setReplayPreset(this,'3d')">Last 3d</button>
+                <button class="preset-btn" onclick="setReplayPreset(this,'7d')">Last 7d</button>
+                <button class="preset-btn" onclick="setReplayPreset(this,'14d')">Last 14d</button>
+                <button class="preset-btn" onclick="setReplayPreset(this,'30d')">Last 30d</button>
+              </div>
+            </div>
+            <!-- Replay stat cards -->
+            <div class="stat-cards mb-14">
+              <div class="stat-card">
+                <div class="stat-card-label">Total Events</div>
+                <div class="stat-card-value">48,220</div>
+                <div class="stat-card-meta">in selected range</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Peak Hour</div>
+                <div class="stat-card-value">2,841</div>
+                <div class="stat-card-meta">Tue 03:00 UTC</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Countries</div>
+                <div class="stat-card-value">42</div>
+                <div class="stat-card-meta">unique origins</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">Frames</div>
+                <div class="stat-card-value">168</div>
+                <div class="stat-card-meta">1 frame = 1 hour</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-label">IPs Blocked</div>
+                <div class="stat-card-value">2,190</div>
+                <div class="stat-card-meta">during replay</div>
+              </div>
+            </div>
+            <!-- Mini map canvas for replay -->
+            <div class="globe-wrap">
+              <canvas id="replay-canvas" height="220" style="display:block;width:100%"></canvas>
+              <div style="position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4)">
+                Frame 64 / 168 — 2026-06-12 15:00 UTC
+              </div>
+            </div>
+          </div>
+          <!-- Scrubber -->
+          <div class="scrubber-wrap">
+            <div class="scrubber-track" id="scrubber-track" onclick="handleScrubberClick(event)">
+              <div class="scrubber-ghost"></div>
+              <div class="scrubber-fill" id="scrubber-fill"></div>
+              <div class="scrubber-thumb" id="scrubber-thumb"></div>
+            </div>
+            <div class="scrubber-meta">
+              <span id="scrubber-ts">2026-06-12 15:00 UTC</span>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button class="icon-btn" id="replay-play-btn" data-tip="Play" onclick="toggleReplay()">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+                <div class="speed-chips">
+                  <span class="speed-chip" onclick="setSpeed(this,'0.5x')">0.5×</span>
+                  <span class="speed-chip active" onclick="setSpeed(this,'1x')">1×</span>
+                  <span class="speed-chip" onclick="setSpeed(this,'2x')">2×</span>
+                  <span class="speed-chip" onclick="setSpeed(this,'5x')">5×</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end main-area -->
+  </div><!-- end app-shell -->
+
   <script>
-    /* ── Configuration ── */
+    /* ══════════════════════════════════════════════════════
+       CONFIG
+    ══════════════════════════════════════════════════════ */
     var CONFIG = {
-      /* Set these to connect to a live backend. Leave empty for placeholder display. */
-      BASE_URL:  '',   /* e.g. 'https://your-worker.workers.dev' */
-      ADMIN_KEY: ''    /* pre-shared admin bearer token */
+      BASE_URL:  '',
+      ADMIN_KEY: '',
+      WARNING_ACTIVE: true   /* set false to hide amber banner */
     };
 
-    /* ── State ── */
-    var currentWindow = '24h';
+    /* ══════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', function () {
+      if (CONFIG.WARNING_ACTIVE) {
+        document.getElementById('warning-banner').classList.add('active');
+      }
+      initTabs();
+      initPills();
+      initGlobe();
+      initReplayCanvas();
+      renderCriticalEvents();
+      renderBlocklist();
+      renderHeatmap();
+      renderEventTimelineChart();
+      renderSeverityDonut();
+      updateSidebarClock();
+      setInterval(updateSidebarClock, 30000);
+    });
 
-    /* ── DOM refs ── */
-    var statTotal     = document.getElementById('stat-total');
-    var statCritical  = document.getElementById('stat-critical');
-    var statCountries = document.getElementById('stat-countries');
-    var networksBody  = document.getElementById('networks-body');
-    var networksMeta  = document.getElementById('networks-meta');
-    var skeleton      = document.getElementById('networks-skeleton');
+    /* ══════════════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════════════ */
+    function initTabs() {
+      document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(function (b) {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          document.querySelectorAll('.tab-pane').forEach(function (p) {
+            p.classList.remove('active');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          var pane = document.getElementById('tab-' + target);
+          if (pane) pane.classList.add('active');
+        });
+      });
+    }
 
-    /* ── Fetch helper ── */
+    /* ══════════════════════════════════════════════════════
+       PILLS (filter groups)
+    ══════════════════════════════════════════════════════ */
+    function initPills() {
+      document.querySelectorAll('.pill[data-filter-group]').forEach(function (pill) {
+        pill.addEventListener('click', function () {
+          var group = pill.getAttribute('data-filter-group');
+          document.querySelectorAll('.pill[data-filter-group="' + group + '"]').forEach(function (p) {
+            p.classList.remove('active');
+          });
+          pill.classList.add('active');
+        });
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SIDEBAR CLOCK
+    ══════════════════════════════════════════════════════ */
+    function updateSidebarClock() {
+      var el = document.getElementById('sidebar-last-scan');
+      if (el) el.textContent = 'Last scan: ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' UTC';
+    }
+
+    /* ══════════════════════════════════════════════════════
+       GLOBE (vanilla canvas)
+    ══════════════════════════════════════════════════════ */
+    function initGlobe() {
+      var canvas = document.getElementById('globe-canvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = Math.min(canvas.parentElement.clientWidth * 0.45, 340);
+      }
+      resize();
+      window.addEventListener('resize', function () { resize(); drawGlobe(); });
+
+      /* World map dots — [lat, lng] approximations for major landmasses */
+      var landDots = [];
+      var regions = [
+        /* North America */
+        [[60,-100],[55,-95],[50,-90],[50,-80],[45,-75],[40,-75],[35,-80],[30,-85],[25,-100],[30,-110],[40,-105],[45,-110],[50,-115],[55,-120],[60,-120],[35,-90],[40,-90],[45,-95],[50,-100],[55,-105]],
+        /* South America */
+        [[10,-65],[5,-55],[0,-50],[-5,-40],[-10,-40],[-15,-40],[-20,-45],[-25,-50],[-30,-55],[-35,-60],[-40,-65],[-10,-75],[-15,-70],[0,-65],[5,-60],[-5,-60]],
+        /* Europe */
+        [[60,10],[55,10],[50,5],[50,15],[55,20],[60,20],[65,25],[55,25],[50,20],[45,15],[40,15],[45,25],[50,30],[55,30],[60,30],[65,15],[70,20]],
+        /* Africa */
+        [[35,5],[30,10],[20,15],[10,10],[0,10],[-5,15],[-10,20],[-15,25],[-20,25],[-25,28],[-30,28],[-35,25],[-10,30],[-5,35],[5,35],[15,40],[20,35],[25,30],[30,30],[15,20],[0,20]],
+        /* Asia */
+        [[60,60],[55,65],[50,70],[45,75],[40,80],[35,80],[30,75],[25,80],[20,80],[15,80],[10,80],[25,90],[30,100],[40,105],[50,100],[55,95],[60,90],[65,70],[70,60],[60,50],[55,50],[50,55],[45,60],[35,60],[30,60],[25,55],[20,60],[15,75],[35,45],[40,45],[45,45],[30,50]],
+        /* Australia */
+        [[-20,130],[-25,130],[-30,135],[-35,140],[-40,145],[-35,150],[-25,150],[-20,145],[-15,135],[-20,120],[-25,120],[-30,120],[-25,140],[-30,145]],
+        /* East Asia */
+        [[35,135],[40,135],[45,130],[35,130],[30,120],[25,120],[25,110],[30,110],[35,120]]
+      ];
+
+      regions.forEach(function (region) {
+        region.forEach(function (coord) {
+          landDots.push(coord);
+        });
+      });
+
+      /* Attack arcs — [srcLat, srcLng, dstLat, dstLng] */
+      var arcs = [
+        [39.9, 116.3, 40.7, -74.0],
+        [55.7, 37.6, 48.9, 2.3],
+        [28.6, 77.2, 37.8, -122.4],
+        [-23.5, -46.6, 40.7, -74.0],
+        [1.3, 103.8, 51.5, -0.1]
+      ];
+
+      var animT = 0;
+
+      function latLngToXY(lat, lng, W, H) {
+        var x = (lng + 180) / 360 * W;
+        var y = (90 - lat) / 180 * H;
+        return [x, y];
+      }
+
+      function drawGlobe() {
+        var W = canvas.width;
+        var H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        /* Background gradient */
+        var grad = ctx.createRadialGradient(W * 0.4, H * 0.5, 10, W * 0.4, H * 0.5, W * 0.6);
+        grad.addColorStop(0, '#0d1f3c');
+        grad.addColorStop(1, '#060d1a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        /* Grid lines */
+        ctx.strokeStyle = 'rgba(30,41,59,0.5)';
+        ctx.lineWidth = 0.5;
+        for (var lng = -180; lng <= 180; lng += 30) {
+          var x = (lng + 180) / 360 * W;
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        for (var lat = -90; lat <= 90; lat += 30) {
+          var y = (90 - lat) / 180 * H;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+
+        /* Land dots */
+        landDots.forEach(function (d) {
+          var p = latLngToXY(d[0], d[1], W, H);
+          ctx.beginPath();
+          ctx.arc(p[0], p[1], 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(71,85,105,0.6)';
+          ctx.fill();
+        });
+
+        /* Attack arcs */
+        arcs.forEach(function (arc, i) {
+          var src = latLngToXY(arc[0], arc[1], W, H);
+          var dst = latLngToXY(arc[2], arc[3], W, H);
+
+          /* Bezier control point arced upward */
+          var midX = (src[0] + dst[0]) / 2;
+          var midY = (src[1] + dst[1]) / 2 - 60;
+
+          /* Progress along arc (animated) */
+          var phase = (animT * 0.008 + i * 0.25) % 1;
+          var t = phase;
+
+          /* Draw trail */
+          var trailLen = 0.25;
+          var tStart = Math.max(0, t - trailLen);
+
+          ctx.beginPath();
+          for (var step = 0; step <= 20; step++) {
+            var tt = tStart + (t - tStart) * step / 20;
+            var bx = (1-tt)*(1-tt)*src[0] + 2*(1-tt)*tt*midX + tt*tt*dst[0];
+            var by = (1-tt)*(1-tt)*src[1] + 2*(1-tt)*tt*midY + tt*tt*dst[1];
+            if (step === 0) ctx.moveTo(bx, by); else ctx.lineTo(bx, by);
+          }
+
+          var alpha = 0.6 + 0.4 * Math.sin(animT * 0.05 + i);
+          ctx.strokeStyle = 'rgba(233,69,96,' + alpha + ')';
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = '#e94560';
+          ctx.shadowBlur = 6;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          /* Head dot */
+          var bxH = (1-t)*(1-t)*src[0] + 2*(1-t)*t*midX + t*t*dst[0];
+          var byH = (1-t)*(1-t)*src[1] + 2*(1-t)*t*midY + t*t*dst[1];
+          ctx.beginPath();
+          ctx.arc(bxH, byH, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#ef4444';
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          /* Source dot (origin) */
+          ctx.beginPath();
+          ctx.arc(src[0], src[1], 4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(233,69,96,0.7)';
+          ctx.fill();
+        });
+
+        animT++;
+        requestAnimationFrame(drawGlobe);
+      }
+
+      drawGlobe();
+    }
+
+    /* ══════════════════════════════════════════════════════
+       REPLAY CANVAS
+    ══════════════════════════════════════════════════════ */
+    function initReplayCanvas() {
+      var canvas = document.getElementById('replay-canvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+      }
+      resize();
+
+      function draw() {
+        var W = canvas.width;
+        var H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#060d1a';
+        ctx.fillRect(0, 0, W, H);
+
+        /* Grid */
+        ctx.strokeStyle = 'rgba(30,41,59,0.4)';
+        ctx.lineWidth = 0.5;
+        for (var lng = -180; lng <= 180; lng += 30) {
+          var x = (lng + 180) / 360 * W;
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        for (var lat = -90; lat <= 90; lat += 30) {
+          var y = (90 - lat) / 180 * H;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+
+        /* Static dots for replay frame */
+        var replayDots = [[39.9,116.3],[55.7,37.6],[28.6,77.2],[-23.5,-46.6],[1.3,103.8],[40.7,-74.0],[51.5,-0.1],[48.9,2.3],[37.8,-122.4]];
+        replayDots.forEach(function (d, i) {
+          var rx = (d[1] + 180) / 360 * W;
+          var ry = (90 - d[0]) / 180 * H;
+          ctx.beginPath();
+          ctx.arc(rx, ry, i < 5 ? 5 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = i < 5 ? 'rgba(233,69,96,0.8)' : 'rgba(71,85,105,0.5)';
+          if (i < 5) { ctx.shadowColor = '#e94560'; ctx.shadowBlur = 8; }
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+      }
+      draw();
+      window.addEventListener('resize', function () { resize(); draw(); });
+    }
+
+    /* ══════════════════════════════════════════════════════
+       CRITICAL EVENTS TABLE
+    ══════════════════════════════════════════════════════ */
+    var DEMO_EVENTS = [
+      { ts:'2026-06-15 14:32:01', ip:'45.142.212.18', cc:'CN', route:'/api/auth/login', reason:'wrong_password', score:94 },
+      { ts:'2026-06-15 14:31:48', ip:'185.220.101.47', cc:'RU', route:'/api/auth/token', reason:'account_locked', score:88 },
+      { ts:'2026-06-15 14:31:22', ip:'103.88.45.201', cc:'IN', route:'/api/auth/login', reason:'user_not_found', score:83 },
+      { ts:'2026-06-15 14:30:55', ip:'198.54.117.66', cc:'US', route:'/admin', reason:'wrong_password', score:81 },
+      { ts:'2026-06-15 14:30:11', ip:'177.93.11.83', cc:'BR', route:'/api/auth/login', reason:'wrong_password', score:80 },
+      { ts:'2026-06-15 14:29:47', ip:'91.108.4.22', cc:'NL', route:'/api/auth/login', reason:'wrong_password', score:82 },
+      { ts:'2026-06-15 14:29:02', ip:'5.188.206.14', cc:'RU', route:'/api/reset', reason:'token_expired', score:85 },
+    ];
+
+    function sevClass(score) {
+      if (score >= 80) return 'sev-critical';
+      if (score >= 60) return 'sev-high';
+      if (score >= 40) return 'sev-med';
+      return 'sev-low';
+    }
+    function sevLabel(score) {
+      if (score >= 80) return '▲ Critical';
+      if (score >= 60) return '● High';
+      if (score >= 40) return '◆ Med';
+      return '■ Low';
+    }
+
+    function renderCriticalEvents() {
+      var tbody = document.getElementById('critical-events-body');
+      if (!tbody) return;
+      tbody.innerHTML = DEMO_EVENTS.map(function (ev) {
+        var sc = sevClass(ev.score);
+        var sl = sevLabel(ev.score);
+        return '<tr>' +
+          '<td class="ts-meta">' + ev.ts + '</td>' +
+          '<td class="mono">' + ev.ip + '</td>' +
+          '<td>' + ev.cc + '</td>' +
+          '<td class="mono" style="font-size:11px">' + ev.route + '</td>' +
+          '<td class="mono" style="font-size:11px">' + ev.reason + '</td>' +
+          '<td><span class="sev-badge ' + sc + '" aria-label="Score ' + ev.score + ': ' + sl + '">' + sl + ' ' + ev.score + '</span></td>' +
+          '<td style="white-space:nowrap">' +
+          '<button class="btn btn-ghost btn-sm">Probe</button> ' +
+          '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + ev.ip + '\')">Block</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       BLOCKLIST
+    ══════════════════════════════════════════════════════ */
+    var DEMO_BLOCKS = [
+      { ip:'45.142.212.0/24', type:'CIDR', reason:'Credential stuffing campaign', at:'2026-06-15 12:00', exp:'2026-06-16 12:00' },
+      { ip:'185.220.101.47', type:'IP', reason:'Brute force — 300 failures / 5min', at:'2026-06-15 11:45', exp:'Permanent' },
+      { ip:'CN', type:'Country', reason:'Geo-block — elevated threat level', at:'2026-06-14 09:00', exp:'2026-06-21 09:00' },
+      { ip:'103.88.45.201', type:'IP', reason:'Spamhaus DROP match', at:'2026-06-15 10:22', exp:'2026-06-16 10:22' },
+      { ip:'5.188.206.0/24', type:'CIDR', reason:'Known Tor exit range', at:'2026-06-13 08:00', exp:'Permanent' },
+    ];
+
+    function renderBlocklist() {
+      var tbody = document.getElementById('blocklist-body');
+      if (!tbody) return;
+      tbody.innerHTML = DEMO_BLOCKS.map(function (b) {
+        return '<tr>' +
+          '<td class="mono">' + b.ip + '</td>' +
+          '<td><span class="sev-badge ' + (b.type === 'Country' ? 'sev-high' : 'sev-none') + '">' + b.type + '</span></td>' +
+          '<td style="color:var(--text-secondary);font-size:12px">' + b.reason + '</td>' +
+          '<td class="ts-meta">' + b.at + '</td>' +
+          '<td class="mono" style="font-size:11px;color:' + (b.exp === 'Permanent' ? 'var(--sev-critical)' : 'var(--text-muted)') + '">' + b.exp + '</td>' +
+          '<td><button class="btn btn-danger btn-sm" onclick="removeBlock(this)">Remove</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function handleBlockIP() {
+      var ip = document.getElementById('block-ip-input').value.trim();
+      if (!ip) { showToast('Enter an IP address or CIDR range', 'warn'); return; }
+      var ttlSel = document.getElementById('block-ttl-select');
+      var ttlLabel = ttlSel.options[ttlSel.selectedIndex].text;
+      showToast('Block added: ' + ip + ' (' + ttlLabel + ')', 'success');
+      document.getElementById('block-ip-input').value = '';
+      document.getElementById('block-reason-input').value = '';
+    }
+
+    function quickBlock(ip) {
+      showToast('Blocked: ' + ip + ' (24 hours)', 'success');
+    }
+
+    function removeBlock(btn) {
+      var row = btn.closest('tr');
+      if (row) row.remove();
+      showToast('Block removed', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       RULES
+    ══════════════════════════════════════════════════════ */
+    var TEMPLATES = {
+      brute:   { name:'Brute Force Alert', count:20, window:60, cooldown:300, action:'Alert + Block IP' },
+      stuffing:{ name:'Credential Stuffing', count:100, window:300, cooldown:600, action:'Alert Only' },
+      anomaly: { name:'High Anomaly Score', count:1, window:0, cooldown:60, action:'Alert Only' }
+    };
+
+    function applyTemplate(tpl) {
+      var t = TEMPLATES[tpl];
+      if (!t) return;
+      document.getElementById('rule-name').value = t.name;
+      document.getElementById('rule-count').value = t.count;
+      document.getElementById('rule-window').value = t.window;
+      document.getElementById('rule-cooldown').value = t.cooldown;
+      document.getElementById('rule-form-card').scrollIntoView({ behavior: 'smooth' });
+      showToast('Template applied: ' + t.name);
+    }
+
+    function handleSaveRule() {
+      var name = document.getElementById('rule-name').value.trim();
+      if (!name) { showToast('Enter a rule name', 'warn'); return; }
+      showToast('Rule saved: ' + name, 'success');
+      clearRuleForm();
+    }
+
+    function clearRuleForm() {
+      document.getElementById('rule-name').value = '';
+      document.getElementById('rule-count').value = 20;
+      document.getElementById('rule-window').value = 60;
+      document.getElementById('rule-cooldown').value = 300;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       HEATMAP
+    ══════════════════════════════════════════════════════ */
+    function renderHeatmap() {
+      var container = document.getElementById('heatmap-container');
+      if (!container) return;
+
+      var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      var hours = [];
+      for (var h = 0; h < 24; h++) hours.push(h);
+
+      /* Simulated attack counts — peak at 0-4 UTC on weekdays */
+      var data = days.map(function (d, di) {
+        return hours.map(function (h) {
+          var base = (di < 5 ? 1 : 0.4);
+          var nightBoost = (h >= 0 && h <= 4) ? 2.5 : 1;
+          return Math.round(base * nightBoost * (200 + Math.random() * 800));
+        });
+      });
+
+      var max = 0;
+      data.forEach(function (row) { row.forEach(function (v) { max = Math.max(max, v); }); });
+
+      var table = document.createElement('table');
+      table.style.cssText = 'border-collapse:collapse;width:100%;table-layout:fixed';
+
+      /* Hour header row */
+      var hdrRow = document.createElement('tr');
+      var emptyTh = document.createElement('th');
+      emptyTh.style.cssText = 'width:36px';
+      hdrRow.appendChild(emptyTh);
+      hours.forEach(function (h) {
+        var th = document.createElement('th');
+        th.style.cssText = 'font-family:var(--mono);font-size:8px;color:var(--text-muted);text-align:center;padding:0 1px 4px;font-weight:400';
+        th.textContent = (h % 3 === 0) ? (h < 10 ? '0' + h : h) : '';
+        hdrRow.appendChild(th);
+      });
+      table.appendChild(hdrRow);
+
+      /* Data rows */
+      data.forEach(function (row, di) {
+        var tr = document.createElement('tr');
+        var dayTd = document.createElement('td');
+        dayTd.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-muted);padding-right:6px;white-space:nowrap';
+        dayTd.textContent = days[di];
+        tr.appendChild(dayTd);
+
+        row.forEach(function (val) {
+          var td = document.createElement('td');
+          var ratio = val / max;
+          var alpha = 0.08 + ratio * 0.92;
+          /* Color from low (green) through yellow to red */
+          var r = Math.round(34 + (239 - 34) * ratio);
+          var g = Math.round(197 + (68 - 197) * ratio);
+          var b = Math.round(94 + (68 - 94) * ratio);
+          td.style.cssText = 'background:rgba(' + r + ',' + g + ',' + b + ',' + alpha + ');border-radius:2px;padding:3px;cursor:default;transition:opacity 0.2s';
+          td.title = val + ' events';
+          td.setAttribute('role', 'gridcell');
+          td.setAttribute('aria-label', val + ' attacks');
+          td.addEventListener('mouseenter', function () { td.style.opacity = '0.75'; });
+          td.addEventListener('mouseleave', function () { td.style.opacity = '1'; });
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       EVENT TIMELINE CHART (SVG)
+    ══════════════════════════════════════════════════════ */
+    function renderEventTimelineChart() {
+      var wrap = document.getElementById('event-timeline-chart');
+      if (!wrap) return;
+
+      var W = wrap.clientWidth || 300;
+      var H = 100;
+      var points = [120, 180, 240, 310, 420, 380, 290, 220, 340, 510, 680, 590, 420, 310, 280, 350, 420, 580, 640, 510, 390, 280, 240, 320];
+      var maxP = Math.max.apply(null, points);
+      var pad = { t: 10, r: 10, b: 30, l: 32 };
+      var iW = W - pad.l - pad.r;
+      var iH = H - pad.t - pad.b;
+
+      var xStep = iW / (points.length - 1);
+      var coords = points.map(function (v, i) {
+        return [pad.l + i * xStep, pad.t + iH - (v / maxP) * iH];
+      });
+
+      var pathD = coords.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+      var fillD = pathD + ' L' + coords[coords.length - 1][0].toFixed(1) + ',' + (pad.t + iH) + ' L' + pad.l + ',' + (pad.t + iH) + ' Z';
+
+      /* Grid lines */
+      var gridLines = '';
+      [0, 0.25, 0.5, 0.75, 1].forEach(function (frac) {
+        var y = pad.t + iH * (1 - frac);
+        var label = Math.round(maxP * frac);
+        gridLines += '<line x1="' + pad.l + '" y1="' + y.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + y.toFixed(1) + '" stroke="rgba(30,41,59,0.8)" stroke-width="0.5"/>';
+        gridLines += '<text x="' + (pad.l - 4) + '" y="' + (y + 3).toFixed(1) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#475569" text-anchor="end">' + (label >= 1000 ? (label/1000).toFixed(1)+'k' : label) + '</text>';
+      });
+
+      /* X-axis labels */
+      var xLabels = '';
+      [0, 6, 12, 18, 23].forEach(function (i) {
+        var x = pad.l + i * xStep;
+        xLabels += '<text x="' + x.toFixed(1) + '" y="' + (H - 6) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#475569" text-anchor="middle">' + (i < 10 ? '0' + i : i) + ':00</text>';
+      });
+
+      wrap.innerHTML = '<svg width="100%" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+        '<defs><linearGradient id="lgFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e94560" stop-opacity="0.3"/><stop offset="100%" stop-color="#e94560" stop-opacity="0.02"/></linearGradient></defs>' +
+        gridLines +
+        '<path d="' + fillD + '" fill="url(#lgFill)"/>' +
+        '<path d="' + pathD + '" fill="none" stroke="#e94560" stroke-width="1.5"/>' +
+        xLabels +
+        '</svg>';
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SEVERITY DONUT (SVG)
+    ══════════════════════════════════════════════════════ */
+    function renderSeverityDonut() {
+      var wrap = document.getElementById('severity-donut-wrap');
+      if (!wrap) return;
+
+      var slices = [
+        { label: 'Critical', pct: 22, color: 'var(--sev-critical)', hex: '#ef4444' },
+        { label: 'High',     pct: 35, color: 'var(--sev-high)',     hex: '#f97316' },
+        { label: 'Medium',   pct: 28, color: 'var(--sev-med)',      hex: '#eab308' },
+        { label: 'Low',      pct: 15, color: 'var(--sev-low)',      hex: '#22c55e' }
+      ];
+
+      var r = 42; var cx = 56; var cy = 56; var strokeW = 14;
+      var circumference = 2 * Math.PI * r;
+      var offset = 0;
+      var circles = slices.map(function (s) {
+        var dash = (s.pct / 100) * circumference;
+        var gap = circumference - dash;
+        var rotate = (offset / 100) * 360 - 90;
+        offset += s.pct;
+        return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + s.hex + '" stroke-width="' + strokeW + '" stroke-dasharray="' + dash.toFixed(2) + ' ' + gap.toFixed(2) + '" stroke-dashoffset="0" transform="rotate(' + rotate + ' ' + cx + ' ' + cy + ')" stroke-linecap="butt"/>';
+      }).join('');
+
+      var legend = slices.map(function (s) {
+        return '<div class="donut-legend-row"><div class="donut-legend-dot" style="background:' + s.hex + '"></div><span>' + s.label + '</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text-primary)">' + s.pct + '%</span></div>';
+      }).join('');
+
+      wrap.innerHTML = '<svg width="112" height="112" viewBox="0 0 112 112" style="flex-shrink:0">' + circles +
+        '<text x="' + cx + '" y="' + (cy + 5) + '" font-family="Syne,sans-serif" font-size="14" font-weight="700" fill="#f1f5f9" text-anchor="middle">Severity</text>' +
+        '</svg>' +
+        '<div class="donut-legend" style="flex:1">' + legend + '</div>';
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TOAST
+    ══════════════════════════════════════════════════════ */
+    var toastTimer = null;
+    function showToast(msg, type) {
+      var existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      if (toastTimer) clearTimeout(toastTimer);
+      var el = document.createElement('div');
+      el.className = 'toast';
+      el.style.borderLeftColor = type === 'warn' ? 'var(--sev-med)' : type === 'error' ? 'var(--sev-critical)' : 'var(--sev-low)';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      toastTimer = setTimeout(function () { if (el.parentNode) el.remove(); }, 3000);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       REPLAY CONTROLS
+    ══════════════════════════════════════════════════════ */
+    var replayPlaying = false;
+    var replayProgress = 0.38;
+    var replayInterval = null;
+    var replaySpeed = 1;
+
+    function toggleReplay() {
+      replayPlaying = !replayPlaying;
+      if (replayPlaying) {
+        replayInterval = setInterval(function () {
+          replayProgress += 0.002 * replaySpeed;
+          if (replayProgress >= 1) { replayProgress = 0; }
+          updateScrubber(replayProgress);
+        }, 100);
+        document.getElementById('replay-play-btn').innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M10 9v6m4-6v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      } else {
+        clearInterval(replayInterval);
+        document.getElementById('replay-play-btn').innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      }
+    }
+
+    function updateScrubber(pct) {
+      var fill = document.getElementById('scrubber-fill');
+      var thumb = document.getElementById('scrubber-thumb');
+      var ts = document.getElementById('scrubber-ts');
+      if (fill) fill.style.width = (pct * 100).toFixed(1) + '%';
+      if (thumb) thumb.style.left = (pct * 100).toFixed(1) + '%';
+      if (ts) {
+        var baseMs = new Date('2026-06-08T00:00:00Z').getTime();
+        var rangeMs = 7 * 24 * 3600 * 1000;
+        var d = new Date(baseMs + pct * rangeMs);
+        ts.textContent = d.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+      }
+    }
+
+    function handleScrubberClick(e) {
+      var track = document.getElementById('scrubber-track');
+      var rect = track.getBoundingClientRect();
+      replayProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      updateScrubber(replayProgress);
+    }
+
+    function setSpeed(el, speed) {
+      document.querySelectorAll('.speed-chip').forEach(function (c) { c.classList.remove('active'); });
+      el.classList.add('active');
+      replaySpeed = parseFloat(speed);
+    }
+
+    function setReplayPreset(el, preset) {
+      document.querySelectorAll('.preset-btn').forEach(function (b) { b.classList.remove('active'); });
+      el.classList.add('active');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       API FETCH (for live backend)
+    ══════════════════════════════════════════════════════ */
     function apiFetch(path) {
       if (!CONFIG.BASE_URL) return Promise.resolve(null);
       return fetch(CONFIG.BASE_URL + path, {
         headers: { 'Authorization': 'Bearer ' + CONFIG.ADMIN_KEY }
-      }).then(function(r) {
+      }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
-      }).catch(function() { return null; });
+      }).catch(function () { return null; });
     }
 
-    /* ── Render networks list ── */
-    function renderNetworks(data) {
-      if (!data || !Array.isArray(data.networks) || data.networks.length === 0) {
-        networksBody.innerHTML =
-          '<div class="networks-empty">No network data in this window</div>';
-        return;
-      }
-      var list = document.createElement('div');
-      list.className = 'networks-list';
-      data.networks.slice(0, 10).forEach(function(n) {
-        var fullName = n.name || 'Unknown';
-        var displayName = fullName.length > 32 ? fullName.slice(0, 32) + '…' : fullName;
-        var pct = typeof n.percentage === 'number' ? n.percentage : 0;
-        var count = n.count != null ? n.count : '–';
-        var row = document.createElement('div');
-        row.className = 'network-row';
-        row.innerHTML =
-          '<span class="network-name" title="' + escapeAttr(fullName) + '">' +
-            escapeHtml(displayName) +
-          '</span>' +
-          '<div class="network-bar-wrap">' +
-            '<div class="network-bar" style="width:' + Math.min(pct, 100).toFixed(1) + '%"></div>' +
-          '</div>' +
-          '<span class="network-count">' + escapeHtml(String(count)) + '</span>' +
-          '<span class="network-pct">' + pct.toFixed(1) + '%</span>';
-        list.appendChild(row);
-      });
-      networksBody.innerHTML = '';
-      networksBody.appendChild(list);
-    }
-
-    /* ── Render stats ── */
-    function renderStats(data) {
-      if (!data) {
-        statTotal.textContent     = '–';
-        statCritical.textContent  = '–';
-        statCountries.textContent = '–';
-        return;
-      }
-      statTotal.textContent     = fmt(data.total_failures != null ? data.total_failures : data.total_events);
-      statCritical.textContent  = fmt(data.critical_count != null ? data.critical_count : data.critical);
-      statCountries.textContent = fmt(data.unique_countries != null ? data.unique_countries : data.countries);
-    }
-
-    /* ── Number formatter ── */
-    function fmt(n) {
-      if (n == null || n !== n) return '–';
-      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-      if (n >= 1000)    return (n / 1000).toFixed(1) + 'k';
-      return String(n);
-    }
-
-    /* ── HTML helpers ── */
-    function escapeHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function escapeAttr(s) { return escapeHtml(s); }
-
-    /* ── Show skeleton while loading ── */
-    function showSkeleton() {
-      networksBody.innerHTML =
-        '<div class="networks-skeleton">' +
-        '<div class="skeleton-row"><div class="skeleton-block" style="width:140px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:34px;height:11px;"></div></div>' +
-        '<div class="skeleton-row"><div class="skeleton-block" style="width:110px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:28px;height:11px;"></div></div>' +
-        '<div class="skeleton-row"><div class="skeleton-block" style="width:160px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:22px;height:11px;"></div></div>' +
-        '<div class="skeleton-row"><div class="skeleton-block" style="width:125px;height:13px;"></div><div class="skeleton-block" style="flex:1;height:6px;border-radius:3px;min-width:60px;"></div><div class="skeleton-block" style="width:30px;height:11px;"></div></div>' +
-        '</div>';
-    }
-
-    /* ── Main refresh: load all data for the current window ── */
-    function refreshAll() {
-      var w = currentWindow;
-      networksMeta.textContent = 'window: ' + w;
-
-      if (!CONFIG.BASE_URL) {
-        /* No backend configured — keep skeleton as-is */
-        return;
-      }
-
-      showSkeleton();
-      statTotal.textContent = statCritical.textContent = statCountries.textContent = '…';
-
-      Promise.all([
-        apiFetch('/api/admin/auth-failures/stats?window=' + w),
-        apiFetch('/api/admin/auth-failures/networks?window=' + w)
-      ]).then(function(results) {
-        renderStats(results[0]);
-        renderNetworks(results[1]);
-      });
-    }
-
-    /* ── Wire window pill buttons ── */
-    document.querySelectorAll('.window-pill').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.window-pill').forEach(function(b) {
-          b.classList.remove('active');
-        });
-        btn.classList.add('active');
-        currentWindow = btn.getAttribute('data-window');
-        refreshAll();
-      });
-    });
-
-    /* ── Initial load ── */
-    refreshAll();
   </script>
 </body>
 </html>
