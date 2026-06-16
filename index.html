@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AttackMap — Security Dashboard</title>
+  <!-- #19: meta polish -->
+  <title>AttackMap — Threat Map Dashboard</title>
+  <meta name="description" content="Real-time cyber threat monitoring — auth-failure geo-dashboard for SOC analysts" />
+  <meta property="og:title" content="AttackMap" />
+  <meta property="og:description" content="Real-time cyber threat monitoring — auth-failure geo-dashboard" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <!-- #19: inline SVG favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23e94560' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/%3E%3Cpath fill='%23fff' d='M10 17l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -20,12 +27,13 @@
       --accent-border: rgba(233,69,96,0.22);
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
-      --text-muted: #475569;
+      /* #8: WCAG AA fix — #475569 was 2.4:1, #7c8fa6 gives ~4.6:1 on #0f172a */
+      --text-muted: #7c8fa6;
       --sev-critical: #ef4444;
       --sev-high: #f97316;
       --sev-med: #eab308;
       --sev-low: #22c55e;
-      --sev-none: #475569;
+      --sev-none: #7c8fa6;
       --mono: "JetBrains Mono", monospace;
       --sans: "DM Sans", system-ui, sans-serif;
       --heading: "Syne", sans-serif;
@@ -149,6 +157,62 @@
       margin-left: 12px;
     }
 
+    /* #11: Global search */
+    .global-search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .global-search-icon {
+      position: absolute;
+      left: 8px;
+      color: var(--text-muted);
+      width: 13px;
+      height: 13px;
+      pointer-events: none;
+    }
+    .global-search {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 8px 5px 26px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-primary);
+      outline: none;
+      width: 200px;
+      transition: border-color 0.15s, width 0.2s;
+    }
+    .global-search::placeholder { color: var(--text-muted); }
+    .global-search:focus { border-color: var(--accent-border); width: 240px; }
+    .global-search-clear {
+      position: absolute;
+      right: 6px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      display: none;
+      padding: 0 2px;
+    }
+    .global-search-clear:hover { color: var(--text-secondary); }
+    .global-search-badge {
+      position: absolute;
+      right: -2px;
+      top: -6px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      display: none;
+      pointer-events: none;
+    }
+
     /* ── Stream status ── */
     .stream-status {
       display: flex;
@@ -167,6 +231,8 @@
       animation: pulse-dot 2s ease-in-out infinite;
       flex-shrink: 0;
     }
+    /* #12: amber state for stale stream */
+    .stream-dot.stale { background: var(--sev-med); }
     @keyframes pulse-dot {
       0%,100% { opacity: 1; }
       50% { opacity: 0.35; }
@@ -377,7 +443,7 @@
     .sev-high { background: rgba(249,115,22,0.15); color: var(--sev-high); }
     .sev-med { background: rgba(234,179,8,0.15); color: var(--sev-med); }
     .sev-low { background: rgba(34,197,94,0.15); color: var(--sev-low); }
-    .sev-none { background: rgba(71,85,105,0.2); color: var(--sev-none); }
+    .sev-none { background: rgba(124,143,166,0.15); color: var(--sev-none); }
 
     /* ── Data table ── */
     .data-table {
@@ -396,8 +462,20 @@
       padding: 8px 12px 8px 0;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
+      /* #10: sortable headers */
+      cursor: pointer;
+      user-select: none;
+      position: relative;
     }
     .data-table th:first-child { padding-left: 0; }
+    /* #10: sort arrows */
+    .data-table th .sort-arrow {
+      margin-left: 4px;
+      opacity: 0.35;
+      font-style: normal;
+    }
+    .data-table th.sort-asc .sort-arrow,
+    .data-table th.sort-desc .sort-arrow { opacity: 1; color: var(--accent); }
     .data-table td {
       padding: 10px 12px 10px 0;
       border-bottom: 1px solid rgba(30,41,59,0.6);
@@ -405,8 +483,23 @@
       vertical-align: middle;
     }
     .data-table td:first-child { padding-left: 0; }
-    .data-table tr:hover td { background: rgba(255,255,255,0.025); }
+    /* #2: clickable rows */
+    .data-table tbody tr {
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .data-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
+    .data-table tbody tr.row-selected td {
+      background: rgba(233,69,96,0.06);
+    }
+    .data-table tbody tr.row-selected td:first-child {
+      border-left: 3px solid var(--accent);
+      padding-left: 8px;
+    }
     .data-table tr:last-child td { border-bottom: none; }
+    /* #11: search highlight */
+    .data-table tbody tr.search-hidden { display: none; }
+    .data-table tbody tr.search-match td { background: rgba(233,69,96,0.06); }
     .mono { font-family: var(--mono); font-size: 12px; }
     .ts-meta { font-size: 11px; color: var(--text-muted); font-style: italic; }
 
@@ -458,8 +551,10 @@
       display: flex;
       flex-direction: column;
       overflow-y: auto;
-      transition: width 0.2s, min-width 0.2s;
+      /* #9: collapse transition */
+      transition: width 0.25s ease, min-width 0.25s ease;
       flex-shrink: 0;
+      position: relative;
     }
     .right-sidebar.collapsed {
       width: 28px;
@@ -467,6 +562,8 @@
       overflow: hidden;
     }
     .right-sidebar.collapsed .sidebar-content { display: none; }
+    .right-sidebar.collapsed .sidebar-stream-status { display: none; }
+    /* #9: collapse button rendered */
     .sidebar-collapse-btn {
       position: absolute;
       left: -13px;
@@ -485,6 +582,7 @@
       color: var(--text-muted);
       z-index: 10;
     }
+    .sidebar-collapse-btn:hover { color: var(--text-primary); border-color: var(--accent-border); }
     .right-sidebar-wrapper {
       position: relative;
       flex-shrink: 0;
@@ -552,6 +650,28 @@
     .ghost-bar-track { flex: 1; height: 5px; border-radius: 3px; }
     .ghost-bar-val { width: 28px; height: 10px; border-radius: 3px; }
     .ghost { background: rgba(255,255,255,0.06); opacity: 0.25; border-radius: 3px; }
+
+    /* #2: Evidence panel populated */
+    .evidence-panel {
+      padding: 10px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .evidence-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+    .evidence-key { color: var(--text-muted); font-family: var(--mono); font-size: 10px; }
+    .evidence-val { color: var(--text-primary); font-family: var(--mono); font-size: 11px; text-align: right; max-width: 140px; word-break: break-all; }
+    .evidence-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
 
     /* ── Bar chart (CSS) ── */
     .bar-chart { display: flex; flex-direction: column; gap: 8px; }
@@ -621,6 +741,8 @@
       border-radius: 3px;
       aspect-ratio: 1;
       transition: opacity 0.2s;
+      /* #13: clickable */
+      cursor: pointer;
     }
     .heatmap-cell:hover { opacity: 0.8; }
     .heatmap-axes {
@@ -633,8 +755,41 @@
       color: var(--text-muted);
       text-align: center;
     }
+    /* #5: heatmap legend */
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .heatmap-legend-swatch {
+      width: 14px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    /* #13: heatmap popover */
+    .heatmap-popover {
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-primary);
+      z-index: 200;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .heatmap-popover.visible { display: block; }
+    .heatmap-popover-title { font-family: var(--heading); font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .heatmap-popover-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--text-secondary); margin-bottom: 2px; }
+    .heatmap-popover-row span:last-child { font-family: var(--mono); color: var(--text-primary); }
 
-    /* ── Globe canvas ── */
+    /* ── Threat Map canvas (renamed from globe) ── */
     #globe-canvas {
       display: block;
       width: 100%;
@@ -648,6 +803,68 @@
       border: 1px solid var(--border);
       overflow: hidden;
     }
+    /* #6: Triage strip */
+    .triage-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .triage-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .triage-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .triage-value {
+      font-family: var(--heading);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .triage-action {
+      margin-top: 4px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+    .triage-action:hover { background: rgba(233,69,96,0.2); }
+    /* #20: floating severity legend on Threat Map */
+    .sev-legend-float {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sev-legend-row { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+    .sev-legend-row span:first-child { width: 14px; text-align: center; }
     .globe-legend {
       position: absolute;
       bottom: 12px;
@@ -753,6 +970,9 @@
     .btn-sm { padding: 5px 12px; font-size: 12px; }
     .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--sev-critical); }
     .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    /* #17: case button */
+    .btn-case { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; }
+    .btn-case:hover { background: rgba(139,92,246,0.2); }
 
     /* ── Toast ── */
     .toast {
@@ -815,7 +1035,7 @@
       background: var(--accent);
       border-radius: 3px;
       width: 38%;
-      transition: width 0.1s;
+      transition: width 0.05s;
     }
     .scrubber-ghost {
       position: absolute;
@@ -837,7 +1057,10 @@
       background: var(--accent);
       border: 2px solid var(--bg);
       box-shadow: 0 0 0 2px var(--accent-border);
+      /* #18: draggable cursor */
+      cursor: grab;
     }
+    .scrubber-thumb:active { cursor: grabbing; }
     .scrubber-meta {
       display: flex;
       align-items: center;
@@ -964,6 +1187,12 @@
       font-size: 11px;
     }
 
+    /* #16: Row sparklines */
+    .row-sparkline {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
     /* ── Grid layout helpers ── */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -1013,55 +1242,157 @@
     }
     .preset-btn:hover { border-color: var(--accent-border); color: var(--text-secondary); }
     .preset-btn.active { border-color: var(--accent-border); background: var(--accent-dim); color: var(--accent); }
+
+    /* #17: Case modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 380px;
+      max-width: 90vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .modal-title {
+      font-family: var(--heading);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+    .modal-field {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(30,41,59,0.5);
+      font-size: 12px;
+    }
+    .modal-field:last-of-type { border-bottom: none; margin-bottom: 14px; }
+    .modal-field-key { color: var(--text-muted); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .modal-field-val { color: var(--text-primary); font-family: var(--mono); font-size: 11px; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    /* #7: Responsive breakpoints */
+    @media (max-width: 1200px) {
+      .right-sidebar { width: 200px; min-width: 200px; }
+    }
+    @media (max-width: 900px) {
+      .right-sidebar { display: none; }
+      .stat-cards { grid-template-columns: repeat(3, 1fr); }
+      .triage-strip { grid-template-columns: 1fr 1fr; }
+      .triage-strip > .triage-card:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 600px) {
+      body { overflow: auto; }
+      .content-with-sidebar { flex-direction: column; }
+      .tab-bar { overflow-x: auto; }
+      .stat-cards { grid-template-columns: repeat(2, 1fr); }
+      .triage-strip { grid-template-columns: 1fr; }
+      .filter-bar { flex-wrap: wrap; gap: 6px; }
+      .filter-select { font-size: 12px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .template-cards { grid-template-columns: 1fr; }
+      .data-table { overflow-x: auto; display: block; }
+      .topbar-brand { font-size: 14px; margin-right: 10px; }
+      .global-search { width: 120px; }
+      .global-search:focus { width: 150px; }
+    }
+    @media (max-width: 400px) {
+      .stat-cards { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: flex-start; }
+    }
+    /* overflow-x on all tables for mobile scroll */
+    .table-scroll-wrap { overflow-x: auto; }
   </style>
 </head>
 <body>
 
-  <!-- Warning banner (shown when WARNING_ACTIVE = true) -->
+  <!-- Warning banner -->
   <div class="warning-banner" id="warning-banner">
     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
     <span class="warning-banner-text">Elevated threat activity detected — 3 IPs breached brute-force threshold in the last 15 minutes. Review the Event Feed for details.</span>
     <button class="warning-banner-close" onclick="document.getElementById('warning-banner').classList.remove('active')">×</button>
   </div>
 
+  <!-- #17: Case modal -->
+  <div class="modal-overlay" id="case-modal" onclick="if(event.target===this)closeCaseModal()">
+    <div class="modal-box">
+      <div class="modal-title">Create Incident Case</div>
+      <div id="case-modal-fields"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" onclick="copyCaseToClipboard()">Copy JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeCaseModal()">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #5: heatmap popover -->
+  <div class="heatmap-popover" id="heatmap-popover">
+    <div class="heatmap-popover-title" id="hp-title"></div>
+    <div class="heatmap-popover-row"><span>Events</span><span id="hp-count"></span></div>
+    <div class="heatmap-popover-row"><span>Top route</span><span id="hp-route"></span></div>
+    <div class="heatmap-popover-row"><span>Peak severity</span><span id="hp-sev"></span></div>
+  </div>
+
   <div class="app-shell">
     <!-- Top bar -->
     <div class="topbar">
       <div class="topbar-brand">Attack<span>Map</span></div>
-      <div class="tab-bar" role="tablist">
-        <button class="tab-btn active" data-tab="live-map" role="tab" aria-selected="true">
+      <!-- #14: ARIA tablist with proper roles -->
+      <div class="tab-bar" role="tablist" id="main-tablist">
+        <button class="tab-btn active" data-tab="live-map" role="tab" aria-selected="true" id="tab-btn-live-map" aria-controls="tab-live-map">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-          Live Map
+          <!-- #15: renamed from Live Map to Threat Map -->
+          Threat Map
         </button>
-        <button class="tab-btn" data-tab="event-feed" role="tab">
+        <button class="tab-btn" data-tab="event-feed" role="tab" aria-selected="false" id="tab-btn-event-feed" aria-controls="tab-event-feed">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           Event Feed
         </button>
-        <button class="tab-btn" data-tab="threat-intel" role="tab">
+        <button class="tab-btn" data-tab="threat-intel" role="tab" aria-selected="false" id="tab-btn-threat-intel" aria-controls="tab-threat-intel">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.007-.13-1.985-.382-2.916z"/></svg>
           Threat Intel
         </button>
-        <button class="tab-btn" data-tab="statistics" role="tab">
+        <button class="tab-btn" data-tab="statistics" role="tab" aria-selected="false" id="tab-btn-statistics" aria-controls="tab-statistics">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
           Statistics
         </button>
-        <button class="tab-btn" data-tab="blocklist" role="tab">
+        <button class="tab-btn" data-tab="blocklist" role="tab" aria-selected="false" id="tab-btn-blocklist" aria-controls="tab-blocklist">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
           Blocklist
         </button>
-        <button class="tab-btn" data-tab="rules" role="tab">
+        <button class="tab-btn" data-tab="rules" role="tab" aria-selected="false" id="tab-btn-rules" aria-controls="tab-rules">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           Rules
         </button>
-        <button class="tab-btn" data-tab="replay" role="tab">
+        <button class="tab-btn" data-tab="replay" role="tab" aria-selected="false" id="tab-btn-replay" aria-controls="tab-replay">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Replay
         </button>
       </div>
       <div class="topbar-right">
+        <!-- #11: Global search input -->
+        <div class="global-search-wrap" id="global-search-wrap">
+          <svg class="global-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+          <input class="global-search" id="global-search" type="text" placeholder="Search IPs, routes, countries…" autocomplete="off" />
+          <button class="global-search-clear" id="global-search-clear" onclick="clearGlobalSearch()">×</button>
+          <span class="global-search-badge" id="global-search-badge"></span>
+        </div>
+        <!-- #12: Stream status with live freshness -->
         <div class="stream-status">
-          <div class="stream-dot"></div>
-          <span>ARMED</span>
+          <div class="stream-dot" id="topbar-stream-dot"></div>
+          <span id="topbar-stream-label">ARMED</span>
         </div>
       </div>
     </div>
@@ -1069,8 +1400,8 @@
     <!-- Main area -->
     <div class="main-area">
 
-      <!-- ─────────── TAB 1: LIVE MAP ─────────── -->
-      <div class="tab-pane active" id="tab-live-map">
+      <!-- ─────────── TAB 1: THREAT MAP (formerly Live Map) ─────────── -->
+      <div class="tab-pane active" id="tab-live-map" role="tabpanel" aria-labelledby="tab-btn-live-map" tabindex="0">
         <div class="filter-bar">
           <div class="filter-pills">
             <span class="pill active" data-filter-group="window" data-val="1h">1h</span>
@@ -1079,10 +1410,21 @@
             <span class="pill" data-filter-group="window" data-val="7d">7d</span>
           </div>
           <div class="filter-divider"></div>
-          <select class="filter-select"><option>All Regions</option><option>Asia Pacific</option><option>Europe</option><option>North America</option><option>South America</option></select>
-          <select class="filter-select"><option>All Severity</option><option>Critical</option><option>High</option><option>Medium</option></select>
+          <select class="filter-select" id="map-region-filter">
+            <option value="">All Regions</option>
+            <option value="APAC">Asia Pacific</option>
+            <option value="EU">Europe</option>
+            <option value="NA">North America</option>
+            <option value="SA">South America</option>
+          </select>
+          <select class="filter-select" id="map-sev-filter">
+            <option value="">All Severity</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="med">Medium</option>
+          </select>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Refresh">
+          <button class="icon-btn" data-tip="Refresh" onclick="applyFilters()">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
           <button class="icon-btn" data-tip="Export">
@@ -1124,9 +1466,30 @@
                 <div class="stat-card-meta">score 0–100</div>
               </div>
             </div>
-            <!-- Globe -->
+            <!-- #6: Triage strip -->
+            <div class="triage-strip mb-14">
+              <div class="triage-card">
+                <div class="triage-label">Highest Severity IP</div>
+                <div class="triage-value">45.142.212.18 (CN)</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Score 94 — 1,240 failures</div>
+                <button class="triage-action" onclick="quickBlock('45.142.212.18')">▲ Block IP</button>
+              </div>
+              <div class="triage-card">
+                <div class="triage-label">Most Targeted Route</div>
+                <div class="triage-value">/api/auth/login</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">8,241 attempts in last 24h</div>
+                <button class="triage-action" onclick="switchTab('blocklist');showToast('Viewing blocklist for /api/auth/login')">● View Blocklist</button>
+              </div>
+              <div class="triage-card">
+                <div class="triage-label">Top Attacking Country</div>
+                <div class="triage-value">China (CN)</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">+14% this window — 5,320 events</div>
+                <button class="triage-action" onclick="showToast('Geo-block for CN added', 'success')">◆ Add Geo-Block</button>
+              </div>
+            </div>
+            <!-- Threat Map canvas (#15: renamed label) -->
             <div class="globe-wrap mb-14">
-              <canvas id="globe-canvas" height="340"></canvas>
+              <canvas id="globe-canvas" height="340" aria-label="Threat Map — equirectangular attack visualization"></canvas>
               <div class="globe-legend">
                 <div class="globe-legend-item">
                   <div class="globe-legend-dot" style="background:#475569"></div>
@@ -1141,14 +1504,25 @@
                   <span>Critical</span>
                 </div>
               </div>
+              <!-- #20: floating severity legend -->
+              <div class="sev-legend-float" aria-label="Severity legend">
+                <div class="sev-legend-row"><span style="color:var(--sev-critical)">▲</span><span>Critical</span></div>
+                <div class="sev-legend-row"><span style="color:var(--sev-high)">●</span><span>High</span></div>
+                <div class="sev-legend-row"><span style="color:var(--sev-med)">◆</span><span>Medium</span></div>
+                <div class="sev-legend-row"><span style="color:var(--sev-low)">■</span><span>Low</span></div>
+                <div class="sev-legend-row"><span style="color:var(--sev-none)">—</span><span>None</span></div>
+              </div>
             </div>
           </div>
           <!-- Right sidebar -->
-          <div class="right-sidebar">
+          <div class="right-sidebar" id="sidebar-live-map">
+            <!-- #9: collapse button -->
+            <button class="sidebar-collapse-btn" id="collapse-btn-live-map" onclick="toggleSidebar('live-map')" title="Collapse sidebar">‹</button>
             <div class="sidebar-stream-status">
               <div class="sidebar-stream-dot"></div>
               <div>
                 <div class="sidebar-stream-text">Monitoring stream is armed</div>
+                <!-- #12: live scan freshness -->
                 <div class="sidebar-stream-sub" id="sidebar-last-scan">Last scan: just now</div>
               </div>
             </div>
@@ -1183,17 +1557,18 @@
                   </div>
                 </div>
               </div>
+              <!-- #3: single Evidence label (duplicate removed) -->
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px;color:var(--text-muted)">EVIDENCE</div>
-              <div class="sidebar-panel">
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select any event or IP to see enrichment data here.</div>
-                <div class="sidebar-ghost-bars">
+              <div class="sidebar-panel" id="evidence-live-map">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px" id="evidence-live-map-hint">Select any event or IP to see enrichment data here.</div>
+                <div class="sidebar-ghost-bars" id="evidence-live-map-ghost">
                   <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row skeleton-block"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
+                <div class="evidence-panel" id="evidence-live-map-data" style="display:none"></div>
               </div>
             </div>
           </div>
@@ -1201,7 +1576,7 @@
       </div>
 
       <!-- ─────────── TAB 2: EVENT FEED ─────────── -->
-      <div class="tab-pane" id="tab-event-feed">
+      <div class="tab-pane" id="tab-event-feed" role="tabpanel" aria-labelledby="tab-btn-event-feed" tabindex="0">
         <div class="filter-bar">
           <div class="filter-pills">
             <span class="pill active" data-filter-group="feed-window" data-val="live">Live</span>
@@ -1217,11 +1592,12 @@
             <option value="med">Medium</option>
             <option value="low">Low</option>
           </select>
-          <select class="filter-select">
-            <option>All Routes</option>
-            <option>/api/auth/login</option>
-            <option>/api/auth/token</option>
-            <option>/admin</option>
+          <select class="filter-select" id="feed-route-filter">
+            <option value="">All Routes</option>
+            <option value="/api/auth/login">/api/auth/login</option>
+            <option value="/api/auth/token">/api/auth/token</option>
+            <option value="/admin">/admin</option>
+            <option value="/api/reset">/api/reset</option>
           </select>
           <div class="filter-divider"></div>
           <span class="pill" style="cursor:default;background:rgba(233,69,96,0.1);border-color:var(--accent-border);color:var(--accent)">● Credential Stuffing</span>
@@ -1261,6 +1637,7 @@
                 IP Reputation — AbuseIPDB
               </div>
               <div id="ip-rep-list">
+                <!-- #20: consistent glyphs: ▲ Critical, ● High, ◆ Med, ■ Low -->
                 <div class="ip-rep-item">
                   <span class="ip-addr">45.142.212.18</span>
                   <span class="sev-badge sev-critical" aria-label="Critical severity: ▲ Critical">▲ 98 / 100</span>
@@ -1289,16 +1666,19 @@
                 <div class="card-title" style="margin-bottom:0">Recent Critical Events</div>
                 <span class="sev-badge sev-critical" aria-label="Critical">▲ CRITICAL</span>
               </div>
-              <div style="margin-top:12px">
+              <div style="margin-top:12px" class="table-scroll-wrap">
               <table class="data-table" id="critical-events-table">
                 <thead>
                   <tr>
-                    <th>Timestamp</th>
-                    <th>IP Address</th>
-                    <th>Country</th>
-                    <th>Route</th>
-                    <th>Reason</th>
-                    <th>Score</th>
+                    <!-- #10: sortable headers with arrows -->
+                    <th onclick="sortTable('critical-events-table',0,this)" title="Sort by timestamp">Timestamp<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('critical-events-table',1,this)" title="Sort by IP">IP Address<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('critical-events-table',2,this)" title="Sort by country">Country<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('critical-events-table',3,this)" title="Sort by route">Route<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('critical-events-table',4,this)" title="Sort by reason">Reason<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('critical-events-table',5,this)" title="Sort by score">Score<span class="sort-arrow">↕</span></th>
+                    <!-- #16: Trend sparkline column -->
+                    <th>Trend</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1308,12 +1688,13 @@
             </div>
           </div>
           <!-- Right sidebar -->
-          <div class="right-sidebar">
+          <div class="right-sidebar" id="sidebar-event-feed">
+            <button class="sidebar-collapse-btn" id="collapse-btn-event-feed" onclick="toggleSidebar('event-feed')" title="Collapse sidebar">‹</button>
             <div class="sidebar-stream-status">
               <div class="sidebar-stream-dot"></div>
               <div>
                 <div class="sidebar-stream-text">Monitoring stream is armed</div>
-                <div class="sidebar-stream-sub">SSE connected · 2s ago</div>
+                <div class="sidebar-stream-sub">SSE connected · <span id="feed-scan-age">2s ago</span></div>
               </div>
             </div>
             <div class="sidebar-content">
@@ -1326,17 +1707,18 @@
                   <div class="bar-row"><div class="bar-label">/api/reset</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">1,390</div></div>
                 </div>
               </div>
+              <!-- #3: single Evidence label -->
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
-              <div class="sidebar-panel">
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to inspect the IP.</div>
-                <div class="sidebar-ghost-bars">
+              <div class="sidebar-panel" id="evidence-event-feed">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px" id="evidence-event-feed-hint">Click any row to inspect the IP.</div>
+                <div class="sidebar-ghost-bars" id="evidence-event-feed-ghost">
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
+                <div class="evidence-panel" id="evidence-event-feed-data" style="display:none"></div>
               </div>
             </div>
           </div>
@@ -1344,7 +1726,7 @@
       </div>
 
       <!-- ─────────── TAB 3: THREAT INTEL ─────────── -->
-      <div class="tab-pane" id="tab-threat-intel">
+      <div class="tab-pane" id="tab-threat-intel" role="tabpanel" aria-labelledby="tab-btn-threat-intel" tabindex="0">
         <div class="filter-bar">
           <select class="filter-select"><option>All Patterns</option><option>Credential Stuffing</option><option>Brute Force</option><option>Rate Probe</option><option>Tor Exit</option></select>
           <select class="filter-select"><option>All Time</option><option>Last 24h</option><option>Last 7d</option><option>Last 30d</option></select>
@@ -1356,7 +1738,6 @@
         </div>
         <div class="content-with-sidebar">
           <div class="content-main">
-            <!-- AI narrative -->
             <div class="ai-card mb-14">
               <div class="ai-card-badge">✦ AI Analysis</div>
               <div class="ai-card-text">
@@ -1365,21 +1746,21 @@
                 <strong style="color:var(--text-primary)">Recommendation:</strong> Apply geo-block to CN/RU for the <code style="color:var(--accent)">/api/auth/login</code> route or lower the brute-force threshold from 20 to 10 failures per 60s on these ASNs. Threat feed correlation matched 183 IPs against Spamhaus DROP — consider auto-blocking on match.
               </div>
             </div>
-            <!-- Threat pattern table -->
             <div class="card">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                 Threat Patterns
               </div>
-              <table class="data-table">
+              <div class="table-scroll-wrap">
+              <table class="data-table" id="threat-patterns-table">
                 <thead>
                   <tr>
-                    <th>Pattern</th>
-                    <th>Events (24h)</th>
-                    <th>Unique IPs</th>
-                    <th>Top Country</th>
+                    <th onclick="sortTable('threat-patterns-table',0,this)">Pattern<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('threat-patterns-table',1,this)">Events (24h)<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('threat-patterns-table',2,this)">Unique IPs<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('threat-patterns-table',3,this)">Top Country<span class="sort-arrow">↕</span></th>
                     <th>Trend</th>
-                    <th>Risk</th>
+                    <th onclick="sortTable('threat-patterns-table',5,this)">Risk<span class="sort-arrow">↕</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1397,7 +1778,7 @@
                     <td class="mono">88</td>
                     <td>Russia (RU)</td>
                     <td style="color:var(--sev-high)">↑ +8%</td>
-                    <td><span class="sev-badge sev-high" aria-label="High risk: ▲ High">▲ High</span></td>
+                    <td><span class="sev-badge sev-high" aria-label="High risk: ● High">● High</span></td>
                   </tr>
                   <tr>
                     <td><span style="color:var(--text-primary);font-weight:600">◆ Rate Probe</span></td>
@@ -1425,10 +1806,12 @@
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
           <!-- Right sidebar -->
-          <div class="right-sidebar">
+          <div class="right-sidebar" id="sidebar-threat-intel">
+            <button class="sidebar-collapse-btn" id="collapse-btn-threat-intel" onclick="toggleSidebar('threat-intel')" title="Collapse sidebar">‹</button>
             <div class="sidebar-stream-status">
               <div class="sidebar-stream-dot"></div>
               <div>
@@ -1446,17 +1829,17 @@
                   <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Tor exit nodes</span><span class="mono" style="color:var(--text-muted)">71</span></div>
                 </div>
               </div>
+              <!-- #3: single Evidence label -->
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
-              <div class="sidebar-panel">
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a pattern to see correlated IPs.</div>
-                <div class="sidebar-ghost-bars">
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+              <div class="sidebar-panel" id="evidence-threat-intel">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px" id="evidence-threat-intel-hint">Select a pattern to see correlated IPs.</div>
+                <div class="sidebar-ghost-bars" id="evidence-threat-intel-ghost">
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
+                <div class="evidence-panel" id="evidence-threat-intel-data" style="display:none"></div>
               </div>
             </div>
           </div>
@@ -1464,7 +1847,7 @@
       </div>
 
       <!-- ─────────── TAB 4: STATISTICS ─────────── -->
-      <div class="tab-pane" id="tab-statistics">
+      <div class="tab-pane" id="tab-statistics" role="tabpanel" aria-labelledby="tab-btn-statistics" tabindex="0">
         <div class="filter-bar">
           <div class="filter-pills">
             <span class="pill" data-filter-group="stats-window" data-val="24h">24h</span>
@@ -1478,13 +1861,23 @@
         </div>
         <div class="content-with-sidebar">
           <div class="content-main">
-            <!-- Attack heatmap -->
+            <!-- #5: Attack heatmap with seeded data -->
             <div class="card mb-14">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
                 Attack Heatmap — Day × Hour
               </div>
               <div id="heatmap-container" style="margin-top:8px"></div>
+              <!-- #5: color scale legend -->
+              <div class="heatmap-legend">
+                <span>Fewer attacks</span>
+                <div class="heatmap-legend-swatch" style="background:rgba(34,197,94,0.4)"></div>
+                <div class="heatmap-legend-swatch" style="background:rgba(137,132,81,0.6)"></div>
+                <div class="heatmap-legend-swatch" style="background:rgba(234,179,8,0.7)"></div>
+                <div class="heatmap-legend-swatch" style="background:rgba(249,115,22,0.8)"></div>
+                <div class="heatmap-legend-swatch" style="background:rgba(239,68,68,0.95)"></div>
+                <span>More attacks</span>
+              </div>
             </div>
             <!-- Route breakdown + Country breakdown -->
             <div class="grid-2 mb-14">
@@ -1513,7 +1906,6 @@
                 </div>
               </div>
             </div>
-            <!-- Country breakdown -->
             <div class="card">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
@@ -1530,7 +1922,8 @@
             </div>
           </div>
           <!-- Right sidebar -->
-          <div class="right-sidebar">
+          <div class="right-sidebar" id="sidebar-statistics">
+            <button class="sidebar-collapse-btn" id="collapse-btn-statistics" onclick="toggleSidebar('statistics')" title="Collapse sidebar">‹</button>
             <div class="sidebar-stream-status">
               <div class="sidebar-stream-dot"></div>
               <div>
@@ -1548,17 +1941,17 @@
                   <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Max/hour</span><span class="mono">2,841</span></div>
                 </div>
               </div>
+              <!-- #3: single Evidence label -->
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
-              <div class="sidebar-panel">
+              <div class="sidebar-panel" id="evidence-statistics">
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click a chart cell to drill down.</div>
-                <div class="sidebar-ghost-bars">
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+                <div class="sidebar-ghost-bars" id="evidence-statistics-ghost">
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
+                <div class="evidence-panel" id="evidence-statistics-data" style="display:none"></div>
               </div>
             </div>
           </div>
@@ -1566,7 +1959,7 @@
       </div>
 
       <!-- ─────────── TAB 5: BLOCKLIST ─────────── -->
-      <div class="tab-pane" id="tab-blocklist">
+      <div class="tab-pane" id="tab-blocklist" role="tabpanel" aria-labelledby="tab-btn-blocklist" tabindex="0">
         <div class="filter-bar">
           <select class="filter-select"><option>IP Blocks</option><option>Country Blocks</option><option>All</option></select>
           <select class="filter-select"><option>Active Only</option><option>Expired</option><option>All</option></select>
@@ -1577,7 +1970,6 @@
         </div>
         <div class="content-with-sidebar">
           <div class="content-main">
-            <!-- Block IP form -->
             <div class="card mb-14">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
@@ -1605,22 +1997,21 @@
               </div>
               <button class="btn btn-primary" onclick="handleBlockIP()">Block IP</button>
             </div>
-            <!-- Blocklist table -->
             <div class="card">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                 Active Blocks
                 <span style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--text-muted)">1,104 entries</span>
               </div>
-              <div style="overflow-x:auto">
+              <div class="table-scroll-wrap">
               <table class="data-table" id="blocklist-table">
                 <thead>
                   <tr>
-                    <th>IP / CIDR</th>
-                    <th>Type</th>
+                    <th onclick="sortTable('blocklist-table',0,this)">IP / CIDR<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('blocklist-table',1,this)">Type<span class="sort-arrow">↕</span></th>
                     <th>Reason</th>
-                    <th>Blocked At</th>
-                    <th>Expires</th>
+                    <th onclick="sortTable('blocklist-table',3,this)">Blocked At<span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable('blocklist-table',4,this)">Expires<span class="sort-arrow">↕</span></th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1635,7 +2026,8 @@
             </div>
           </div>
           <!-- Right sidebar -->
-          <div class="right-sidebar">
+          <div class="right-sidebar" id="sidebar-blocklist">
+            <button class="sidebar-collapse-btn" id="collapse-btn-blocklist" onclick="toggleSidebar('blocklist')" title="Collapse sidebar">‹</button>
             <div class="sidebar-stream-status">
               <div class="sidebar-stream-dot"></div>
               <div>
@@ -1653,17 +2045,17 @@
                   <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between"><span>Expiring today</span><span class="mono" style="color:var(--sev-med)">18</span></div>
                 </div>
               </div>
+              <!-- #3: single Evidence label -->
               <div class="sidebar-section-label">Evidence</div>
-              <div class="sidebar-section-label" style="padding-top:6px;font-size:10px">EVIDENCE</div>
-              <div class="sidebar-panel">
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Select a block entry to see history.</div>
-                <div class="sidebar-ghost-bars">
-                  <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
+              <div class="sidebar-panel" id="evidence-blocklist">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px" id="evidence-blocklist-hint">Select a block entry to see history.</div>
+                <div class="sidebar-ghost-bars" id="evidence-blocklist-ghost">
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                   <div class="ghost-bar-row"><div class="ghost ghost-bar-label"></div><div class="ghost ghost-bar-track"></div><div class="ghost ghost-bar-val"></div></div>
                 </div>
+                <div class="evidence-panel" id="evidence-blocklist-data" style="display:none"></div>
               </div>
             </div>
           </div>
@@ -1671,7 +2063,7 @@
       </div>
 
       <!-- ─────────── TAB 6: RULES ─────────── -->
-      <div class="tab-pane" id="tab-rules">
+      <div class="tab-pane" id="tab-rules" role="tabpanel" aria-labelledby="tab-btn-rules" tabindex="0">
         <div class="filter-bar">
           <div class="filter-pills">
             <span class="pill active" data-filter-group="rules-filter" data-val="all">All</span>
@@ -1688,7 +2080,6 @@
           </button>
         </div>
         <div class="content-main" style="flex:1;overflow-y:auto">
-          <!-- Onboarding strip -->
           <div class="onboarding-strip">
             <div class="onboarding-step">
               <div class="onboarding-num">1</div>
@@ -1703,7 +2094,6 @@
               <div class="onboarding-text"><strong>Save &amp; activate</strong> Rule evaluates on every ingested event with no latency added.</div>
             </div>
           </div>
-          <!-- Template cards -->
           <div class="template-cards mb-20">
             <div class="template-card" onclick="applyTemplate('brute')">
               <div class="template-card-icon">
@@ -1727,7 +2117,6 @@
               <div class="template-card-desc">Anomaly score ≥ 80 on any single event → immediate alert</div>
             </div>
           </div>
-          <!-- Rules table -->
           <div class="card mb-14">
             <div class="card-title">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
@@ -1737,6 +2126,7 @@
               <thead>
                 <tr>
                   <th>Name</th>
+                  <!-- #20: consistent glyph labels in rules table -->
                   <th>Type</th>
                   <th>Trigger</th>
                   <th>Action</th>
@@ -1748,7 +2138,7 @@
               <tbody id="rules-table-body">
                 <tr>
                   <td style="color:var(--text-primary);font-weight:600">Brute Force Alert</td>
-                  <td><span class="sev-badge sev-high">▲ Threshold</span></td>
+                  <td><span class="sev-badge sev-high">● Threshold</span></td>
                   <td class="mono">20 fail / 60s / IP</td>
                   <td>Alert + Block</td>
                   <td><span class="sev-badge sev-low">■ Active</span></td>
@@ -1787,11 +2177,10 @@
             <div id="rules-empty" class="empty-state" style="display:none">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
               <div class="empty-state-title">No rules configured</div>
-              <div class="empty-state-body">Use the templates above or the form below to create your first detection rule. Rules evaluate on every ingested event in real-time.</div>
+              <div class="empty-state-body">Use the templates above or the form below to create your first detection rule.</div>
               <button class="empty-state-cta" onclick="document.getElementById('rule-form-card').scrollIntoView({behavior:'smooth'})">Create a rule</button>
             </div>
           </div>
-          <!-- New rule form -->
           <div class="card" id="rule-form-card">
             <div class="card-title">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
@@ -1845,7 +2234,7 @@
       </div>
 
       <!-- ─────────── TAB 7: REPLAY ─────────── -->
-      <div class="tab-pane" id="tab-replay">
+      <div class="tab-pane" id="tab-replay" role="tabpanel" aria-labelledby="tab-btn-replay" tabindex="0">
         <div class="filter-bar">
           <div class="filter-spacer"></div>
           <div class="stream-status">
@@ -1855,7 +2244,6 @@
         </div>
         <div class="replay-layout">
           <div class="replay-top">
-            <!-- Date range -->
             <div class="card mb-14">
               <div class="card-title">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -1874,7 +2262,6 @@
                 <button class="preset-btn" onclick="setReplayPreset(this,'30d')">Last 30d</button>
               </div>
             </div>
-            <!-- Replay stat cards -->
             <div class="stat-cards mb-14">
               <div class="stat-card">
                 <div class="stat-card-label">Total Events</div>
@@ -1893,7 +2280,7 @@
               </div>
               <div class="stat-card">
                 <div class="stat-card-label">Frames</div>
-                <div class="stat-card-value">168</div>
+                <div class="stat-card-value" id="replay-frame-counter">64 / 168</div>
                 <div class="stat-card-meta">1 frame = 1 hour</div>
               </div>
               <div class="stat-card">
@@ -1902,17 +2289,16 @@
                 <div class="stat-card-meta">during replay</div>
               </div>
             </div>
-            <!-- Mini map canvas for replay -->
             <div class="globe-wrap">
-              <canvas id="replay-canvas" height="220" style="display:block;width:100%"></canvas>
-              <div style="position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4)">
+              <canvas id="replay-canvas" height="220" style="display:block;width:100%" aria-label="Threat Map replay canvas"></canvas>
+              <div style="position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4)" id="replay-canvas-ts">
                 Frame 64 / 168 — 2026-06-12 15:00 UTC
               </div>
             </div>
           </div>
-          <!-- Scrubber -->
+          <!-- #18: functional scrubber -->
           <div class="scrubber-wrap">
-            <div class="scrubber-track" id="scrubber-track" onclick="handleScrubberClick(event)">
+            <div class="scrubber-track" id="scrubber-track">
               <div class="scrubber-ghost"></div>
               <div class="scrubber-fill" id="scrubber-fill"></div>
               <div class="scrubber-thumb" id="scrubber-thumb"></div>
@@ -1924,10 +2310,10 @@
                   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
                 <div class="speed-chips">
-                  <span class="speed-chip" onclick="setSpeed(this,'0.5x')">0.5×</span>
-                  <span class="speed-chip active" onclick="setSpeed(this,'1x')">1×</span>
-                  <span class="speed-chip" onclick="setSpeed(this,'2x')">2×</span>
-                  <span class="speed-chip" onclick="setSpeed(this,'5x')">5×</span>
+                  <span class="speed-chip" onclick="setSpeed(this,0.5)">0.5×</span>
+                  <span class="speed-chip active" onclick="setSpeed(this,1)">1×</span>
+                  <span class="speed-chip" onclick="setSpeed(this,2)">2×</span>
+                  <span class="speed-chip" onclick="setSpeed(this,5)">5×</span>
                 </div>
               </div>
             </div>
@@ -1945,8 +2331,79 @@
     var CONFIG = {
       BASE_URL:  '',
       ADMIN_KEY: '',
-      WARNING_ACTIVE: true   /* set false to hide amber banner */
+      WARNING_ACTIVE: true
     };
+
+    /* ══════════════════════════════════════════════════════
+       DEMO DATA
+    ══════════════════════════════════════════════════════ */
+    var DEMO_EVENTS = [
+      { ts:'2026-06-15 14:32:01', ip:'45.142.212.18',  cc:'CN', route:'/api/auth/login',  reason:'wrong_password',  score:94, region:'APAC' },
+      { ts:'2026-06-15 14:31:48', ip:'185.220.101.47', cc:'RU', route:'/api/auth/token',  reason:'account_locked',  score:88, region:'EU'   },
+      { ts:'2026-06-15 14:31:22', ip:'103.88.45.201',  cc:'IN', route:'/api/auth/login',  reason:'user_not_found',  score:83, region:'APAC' },
+      { ts:'2026-06-15 14:30:55', ip:'198.54.117.66',  cc:'US', route:'/admin',           reason:'wrong_password',  score:81, region:'NA'   },
+      { ts:'2026-06-15 14:30:11', ip:'177.93.11.83',   cc:'BR', route:'/api/auth/login',  reason:'wrong_password',  score:80, region:'SA'   },
+      { ts:'2026-06-15 14:29:47', ip:'91.108.4.22',    cc:'NL', route:'/api/auth/login',  reason:'wrong_password',  score:82, region:'EU'   },
+      { ts:'2026-06-15 14:29:02', ip:'5.188.206.14',   cc:'RU', route:'/api/reset',       reason:'token_expired',   score:85, region:'EU'   },
+    ];
+
+    /* IP enrichment data used by Evidence rail */
+    var IP_ENRICHMENT = {
+      '45.142.212.18':  { asn:'AS209588 Flyservers', country:'China (CN)', repScore:98, pattern:'Credential Stuffing', hits24h:1240 },
+      '185.220.101.47': { asn:'AS4134 ChinaTelecom', country:'Russia (RU)', repScore:87, pattern:'Brute Force', hits24h:963 },
+      '103.88.45.201':  { asn:'AS9829 BSNL-NIB',     country:'India (IN)',  repScore:72, pattern:'Rate Probe', hits24h:712 },
+      '198.54.117.66':  { asn:'AS12389 Rostelecom',  country:'United States (US)', repScore:41, pattern:'Brute Force', hits24h:501 },
+      '177.93.11.83':   { asn:'AS28573 TIM',          country:'Brazil (BR)', repScore:12, pattern:'Rate Probe', hits24h:364 },
+      '91.108.4.22':    { asn:'AS9009 M247',          country:'Netherlands (NL)', repScore:82, pattern:'Brute Force', hits24h:290 },
+      '5.188.206.14':   { asn:'AS206728 Media Land',  country:'Russia (RU)', repScore:85, pattern:'Credential Stuffing', hits24h:311 },
+    };
+
+    /* #5: deterministic heatmap data (seeded, peak at 0-4 UTC, higher on weekdays) */
+    var HEATMAP_DATA = [
+      /* Mon */ [180,210,380,520,620,410,280,190,150,130,140,160,170,180,190,200,220,310,420,510,380,250,200,190],
+      /* Tue */ [220,260,450,680,720,510,340,230,180,160,170,190,200,210,220,240,270,380,510,640,460,300,240,220],
+      /* Wed */ [200,240,420,590,650,440,310,210,170,150,160,180,190,200,210,230,250,350,470,580,430,280,220,200],
+      /* Thu */ [190,230,400,550,610,420,290,200,160,145,155,175,185,195,205,225,245,330,450,560,410,265,210,195],
+      /* Fri */ [210,250,440,640,700,490,330,220,175,155,165,185,195,205,215,235,260,370,490,620,450,290,235,210],
+      /* Sat */ [90,110,180,260,310,200,140,95,80,70,75,85,90,95,100,110,120,160,200,250,190,130,100,90],
+      /* Sun */ [80,100,160,240,290,185,130,88,75,65,70,80,85,90,95,105,115,150,185,230,175,120,95,85],
+    ];
+
+    var HEATMAP_DAYS    = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    var HEATMAP_ROUTES  = ['/api/auth/login','/api/auth/token','/admin','/api/reset'];
+
+    /* Active filter state */
+    var filterState = {
+      window: '1h',
+      severity: '',
+      region: '',
+      route: '',
+    };
+
+    /* ══════════════════════════════════════════════════════
+       SEVERITY HELPERS
+    ══════════════════════════════════════════════════════ */
+    function sevClass(score) {
+      if (score >= 80) return 'sev-critical';
+      if (score >= 60) return 'sev-high';
+      if (score >= 40) return 'sev-med';
+      return 'sev-low';
+    }
+    /* #20: consistent glyphs: ▲ Critical, ● High, ◆ Med, ■ Low, — None */
+    function sevGlyph(score) {
+      if (score >= 80) return '▲';
+      if (score >= 60) return '●';
+      if (score >= 40) return '◆';
+      if (score > 0)   return '■';
+      return '—';
+    }
+    function sevLabel(score) {
+      if (score >= 80) return '▲ Critical';
+      if (score >= 60) return '● High';
+      if (score >= 40) return '◆ Med';
+      if (score > 0)   return '■ Low';
+      return '— None';
+    }
 
     /* ══════════════════════════════════════════════════════
        INIT
@@ -1957,25 +2414,36 @@
       }
       initTabs();
       initPills();
+      initFilterListeners();
       initGlobe();
       initReplayCanvas();
+      initReplayScrubber();
       renderCriticalEvents();
       renderBlocklist();
       renderHeatmap();
       renderEventTimelineChart();
       renderSeverityDonut();
-      updateSidebarClock();
-      setInterval(updateSidebarClock, 30000);
+      initStreamFreshness();
+      initSidebarCollapseState();
+      initGlobalSearch();
     });
 
     /* ══════════════════════════════════════════════════════
-       TABS
+       TABS (#14: ARIA tabpanel + arrow-key nav)
     ══════════════════════════════════════════════════════ */
+    var currentTab = 'live-map';
+    var globeRafId = null;
+
+    function switchTab(tabName) {
+      var btn = document.querySelector('[data-tab="' + tabName + '"]');
+      if (btn) btn.click();
+    }
+
     function initTabs() {
-      document.querySelectorAll('.tab-btn').forEach(function (btn) {
+      var btns = Array.from(document.querySelectorAll('.tab-btn'));
+      btns.forEach(function (btn, i) {
         btn.addEventListener('click', function () {
-          var target = btn.getAttribute('data-tab');
-          document.querySelectorAll('.tab-btn').forEach(function (b) {
+          btns.forEach(function (b) {
             b.classList.remove('active');
             b.setAttribute('aria-selected', 'false');
           });
@@ -1984,14 +2452,35 @@
           });
           btn.classList.add('active');
           btn.setAttribute('aria-selected', 'true');
+          var target = btn.getAttribute('data-tab');
+          currentTab = target;
           var pane = document.getElementById('tab-' + target);
           if (pane) pane.classList.add('active');
+          /* #4: gate globe rAF — restart when map tab becomes active */
+          if (target === 'live-map') {
+            if (globeRafId === null) initGlobe();
+          }
+        });
+
+        /* #14: arrow-key roving tabindex */
+        btn.addEventListener('keydown', function (e) {
+          var idx = btns.indexOf(btn);
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            var next;
+            if (e.key === 'ArrowRight') next = (idx + 1) % btns.length;
+            else if (e.key === 'ArrowLeft') next = (idx - 1 + btns.length) % btns.length;
+            else if (e.key === 'Home') next = 0;
+            else next = btns.length - 1;
+            btns[next].focus();
+            btns[next].click();
+          }
         });
       });
     }
 
     /* ══════════════════════════════════════════════════════
-       PILLS (filter groups)
+       PILLS (#1: wire to applyFilters)
     ══════════════════════════════════════════════════════ */
     function initPills() {
       document.querySelectorAll('.pill[data-filter-group]').forEach(function (pill) {
@@ -2001,59 +2490,139 @@
             p.classList.remove('active');
           });
           pill.classList.add('active');
+          filterState.window = pill.getAttribute('data-val') || filterState.window;
+          applyFilters();
         });
       });
     }
 
-    /* ══════════════════════════════════════════════════════
-       SIDEBAR CLOCK
-    ══════════════════════════════════════════════════════ */
-    function updateSidebarClock() {
-      var el = document.getElementById('sidebar-last-scan');
-      if (el) el.textContent = 'Last scan: ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' UTC';
+    /* #1: wire dropdown filters */
+    function initFilterListeners() {
+      var sevFilter = document.getElementById('feed-severity-filter');
+      if (sevFilter) sevFilter.addEventListener('change', function () {
+        filterState.severity = sevFilter.value;
+        applyFilters();
+      });
+      var routeFilter = document.getElementById('feed-route-filter');
+      if (routeFilter) routeFilter.addEventListener('change', function () {
+        filterState.route = routeFilter.value;
+        applyFilters();
+      });
+      var mapSevFilter = document.getElementById('map-sev-filter');
+      if (mapSevFilter) mapSevFilter.addEventListener('change', function () {
+        filterState.severity = mapSevFilter.value;
+        applyFilters();
+      });
+      var mapRegionFilter = document.getElementById('map-region-filter');
+      if (mapRegionFilter) mapRegionFilter.addEventListener('change', function () {
+        filterState.region = mapRegionFilter.value;
+        applyFilters();
+      });
+    }
+
+    /* #1: applyFilters — re-renders all visible tables from filtered DEMO_EVENTS */
+    function applyFilters() {
+      var filtered = DEMO_EVENTS.filter(function (ev) {
+        if (filterState.severity) {
+          var cls = sevClass(ev.score).replace('sev-','');
+          if (cls !== filterState.severity) return false;
+        }
+        if (filterState.region && ev.region !== filterState.region) return false;
+        if (filterState.route && ev.route !== filterState.route) return false;
+        return true;
+      });
+      renderCriticalEvents(filtered);
     }
 
     /* ══════════════════════════════════════════════════════
-       GLOBE (vanilla canvas)
+       STREAM FRESHNESS (#12)
+    ══════════════════════════════════════════════════════ */
+    var streamBirthMs = Date.now();
+    function initStreamFreshness() {
+      setInterval(function () {
+        var ageS = Math.round((Date.now() - streamBirthMs) / 1000);
+        var label;
+        if (ageS < 5) label = 'just now';
+        else if (ageS < 60) label = ageS + 's ago';
+        else label = Math.floor(ageS / 60) + 'm ago';
+
+        var scanEl = document.getElementById('sidebar-last-scan');
+        if (scanEl) scanEl.textContent = 'Last scan: ' + label;
+
+        var feedAgeEl = document.getElementById('feed-scan-age');
+        if (feedAgeEl) feedAgeEl.textContent = label;
+
+        /* stale after 60s — turn dot amber */
+        var dot = document.getElementById('topbar-stream-dot');
+        var topbarLabel = document.getElementById('topbar-stream-label');
+        if (ageS > 60) {
+          if (dot) dot.classList.add('stale');
+          if (topbarLabel) topbarLabel.textContent = 'Connection slow';
+        } else {
+          if (dot) dot.classList.remove('stale');
+          if (topbarLabel) topbarLabel.textContent = 'ARMED';
+        }
+
+        /* simulate new event every ~30s */
+        if (ageS > 0 && ageS % 30 === 0) {
+          streamBirthMs = Date.now(); /* reset so it cycles */
+        }
+      }, 1000);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SIDEBAR COLLAPSE (#9)
+    ══════════════════════════════════════════════════════ */
+    function initSidebarCollapseState() {
+      ['live-map','event-feed','threat-intel','statistics','blocklist'].forEach(function (tab) {
+        var sidebar = document.getElementById('sidebar-' + tab);
+        var btn = document.getElementById('collapse-btn-' + tab);
+        if (!sidebar || !btn) return;
+        var stored = localStorage.getItem('sidebar-collapsed-' + tab);
+        if (stored === '1') {
+          sidebar.classList.add('collapsed');
+          btn.textContent = '›';
+        }
+      });
+    }
+
+    function toggleSidebar(tab) {
+      var sidebar = document.getElementById('sidebar-' + tab);
+      var btn = document.getElementById('collapse-btn-' + tab);
+      if (!sidebar || !btn) return;
+      var collapsed = sidebar.classList.toggle('collapsed');
+      btn.textContent = collapsed ? '›' : '‹';
+      localStorage.setItem('sidebar-collapsed-' + tab, collapsed ? '1' : '0');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       GLOBE / THREAT MAP (#4: gate on tab + reduced-motion)
     ══════════════════════════════════════════════════════ */
     function initGlobe() {
       var canvas = document.getElementById('globe-canvas');
       if (!canvas) return;
       var ctx = canvas.getContext('2d');
+      var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       function resize() {
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = Math.min(canvas.parentElement.clientWidth * 0.45, 340);
       }
       resize();
-      window.addEventListener('resize', function () { resize(); drawGlobe(); });
+      window.addEventListener('resize', function () { resize(); if (reducedMotion) drawStatic(); });
 
-      /* World map dots — [lat, lng] approximations for major landmasses */
       var landDots = [];
       var regions = [
-        /* North America */
         [[60,-100],[55,-95],[50,-90],[50,-80],[45,-75],[40,-75],[35,-80],[30,-85],[25,-100],[30,-110],[40,-105],[45,-110],[50,-115],[55,-120],[60,-120],[35,-90],[40,-90],[45,-95],[50,-100],[55,-105]],
-        /* South America */
         [[10,-65],[5,-55],[0,-50],[-5,-40],[-10,-40],[-15,-40],[-20,-45],[-25,-50],[-30,-55],[-35,-60],[-40,-65],[-10,-75],[-15,-70],[0,-65],[5,-60],[-5,-60]],
-        /* Europe */
         [[60,10],[55,10],[50,5],[50,15],[55,20],[60,20],[65,25],[55,25],[50,20],[45,15],[40,15],[45,25],[50,30],[55,30],[60,30],[65,15],[70,20]],
-        /* Africa */
         [[35,5],[30,10],[20,15],[10,10],[0,10],[-5,15],[-10,20],[-15,25],[-20,25],[-25,28],[-30,28],[-35,25],[-10,30],[-5,35],[5,35],[15,40],[20,35],[25,30],[30,30],[15,20],[0,20]],
-        /* Asia */
         [[60,60],[55,65],[50,70],[45,75],[40,80],[35,80],[30,75],[25,80],[20,80],[15,80],[10,80],[25,90],[30,100],[40,105],[50,100],[55,95],[60,90],[65,70],[70,60],[60,50],[55,50],[50,55],[45,60],[35,60],[30,60],[25,55],[20,60],[15,75],[35,45],[40,45],[45,45],[30,50]],
-        /* Australia */
         [[-20,130],[-25,130],[-30,135],[-35,140],[-40,145],[-35,150],[-25,150],[-20,145],[-15,135],[-20,120],[-25,120],[-30,120],[-25,140],[-30,145]],
-        /* East Asia */
         [[35,135],[40,135],[45,130],[35,130],[30,120],[25,120],[25,110],[30,110],[35,120]]
       ];
+      regions.forEach(function (r) { r.forEach(function (c) { landDots.push(c); }); });
 
-      regions.forEach(function (region) {
-        region.forEach(function (coord) {
-          landDots.push(coord);
-        });
-      });
-
-      /* Attack arcs — [srcLat, srcLng, dstLat, dstLng] */
       var arcs = [
         [39.9, 116.3, 40.7, -74.0],
         [55.7, 37.6, 48.9, 2.3],
@@ -2065,24 +2634,15 @@
       var animT = 0;
 
       function latLngToXY(lat, lng, W, H) {
-        var x = (lng + 180) / 360 * W;
-        var y = (90 - lat) / 180 * H;
-        return [x, y];
+        return [(lng + 180) / 360 * W, (90 - lat) / 180 * H];
       }
 
-      function drawGlobe() {
-        var W = canvas.width;
-        var H = canvas.height;
-        ctx.clearRect(0, 0, W, H);
-
-        /* Background gradient */
+      function drawBase(W, H) {
         var grad = ctx.createRadialGradient(W * 0.4, H * 0.5, 10, W * 0.4, H * 0.5, W * 0.6);
         grad.addColorStop(0, '#0d1f3c');
         grad.addColorStop(1, '#060d1a');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
-
-        /* Grid lines */
         ctx.strokeStyle = 'rgba(30,41,59,0.5)';
         ctx.lineWidth = 0.5;
         for (var lng = -180; lng <= 180; lng += 30) {
@@ -2093,33 +2653,46 @@
           var y = (90 - lat) / 180 * H;
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         }
-
-        /* Land dots */
         landDots.forEach(function (d) {
           var p = latLngToXY(d[0], d[1], W, H);
-          ctx.beginPath();
-          ctx.arc(p[0], p[1], 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(71,85,105,0.6)';
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(p[0], p[1], 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(71,85,105,0.6)'; ctx.fill();
         });
+      }
 
-        /* Attack arcs */
+      function drawStatic() {
+        var W = canvas.width; var H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        drawBase(W, H);
+        arcs.forEach(function (arc) {
+          var src = latLngToXY(arc[0], arc[1], W, H);
+          var dst = latLngToXY(arc[2], arc[3], W, H);
+          ctx.beginPath(); ctx.moveTo(src[0], src[1]); ctx.lineTo(dst[0], dst[1]);
+          ctx.strokeStyle = 'rgba(233,69,96,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+          ctx.beginPath(); ctx.arc(src[0], src[1], 4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(233,69,96,0.7)'; ctx.fill();
+        });
+      }
+
+      function drawGlobe() {
+        /* #4: stop if not on live-map tab or page hidden */
+        if (currentTab !== 'live-map' || document.hidden) {
+          cancelAnimationFrame(globeRafId);
+          globeRafId = null;
+          return;
+        }
+        var W = canvas.width; var H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        drawBase(W, H);
         arcs.forEach(function (arc, i) {
           var src = latLngToXY(arc[0], arc[1], W, H);
           var dst = latLngToXY(arc[2], arc[3], W, H);
-
-          /* Bezier control point arced upward */
           var midX = (src[0] + dst[0]) / 2;
           var midY = (src[1] + dst[1]) / 2 - 60;
-
-          /* Progress along arc (animated) */
           var phase = (animT * 0.008 + i * 0.25) % 1;
           var t = phase;
-
-          /* Draw trail */
           var trailLen = 0.25;
           var tStart = Math.max(0, t - trailLen);
-
           ctx.beginPath();
           for (var step = 0; step <= 20; step++) {
             var tt = tStart + (t - tStart) * step / 20;
@@ -2127,38 +2700,36 @@
             var by = (1-tt)*(1-tt)*src[1] + 2*(1-tt)*tt*midY + tt*tt*dst[1];
             if (step === 0) ctx.moveTo(bx, by); else ctx.lineTo(bx, by);
           }
-
           var alpha = 0.6 + 0.4 * Math.sin(animT * 0.05 + i);
           ctx.strokeStyle = 'rgba(233,69,96,' + alpha + ')';
           ctx.lineWidth = 1.5;
-          ctx.shadowColor = '#e94560';
-          ctx.shadowBlur = 6;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-
-          /* Head dot */
+          ctx.shadowColor = '#e94560'; ctx.shadowBlur = 6;
+          ctx.stroke(); ctx.shadowBlur = 0;
           var bxH = (1-t)*(1-t)*src[0] + 2*(1-t)*t*midX + t*t*dst[0];
           var byH = (1-t)*(1-t)*src[1] + 2*(1-t)*t*midY + t*t*dst[1];
-          ctx.beginPath();
-          ctx.arc(bxH, byH, 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#ef4444';
-          ctx.shadowColor = '#ef4444';
-          ctx.shadowBlur = 8;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          /* Source dot (origin) */
-          ctx.beginPath();
-          ctx.arc(src[0], src[1], 4, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(233,69,96,0.7)';
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(bxH, byH, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 8;
+          ctx.fill(); ctx.shadowBlur = 0;
+          ctx.beginPath(); ctx.arc(src[0], src[1], 4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(233,69,96,0.7)'; ctx.fill();
         });
-
         animT++;
-        requestAnimationFrame(drawGlobe);
+        globeRafId = requestAnimationFrame(drawGlobe);
       }
 
-      drawGlobe();
+      /* #4: reduced-motion: static only */
+      if (reducedMotion) {
+        drawStatic();
+      } else {
+        globeRafId = requestAnimationFrame(drawGlobe);
+      }
+
+      /* #4: pause when page hidden */
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && currentTab === 'live-map' && !reducedMotion && globeRafId === null) {
+          globeRafId = requestAnimationFrame(drawGlobe);
+        }
+      });
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2168,22 +2739,13 @@
       var canvas = document.getElementById('replay-canvas');
       if (!canvas) return;
       var ctx = canvas.getContext('2d');
-
-      function resize() {
-        canvas.width = canvas.parentElement.clientWidth;
-      }
+      function resize() { canvas.width = canvas.parentElement.clientWidth; }
       resize();
-
       function draw() {
-        var W = canvas.width;
-        var H = canvas.height;
+        var W = canvas.width; var H = canvas.height;
         ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = '#060d1a';
-        ctx.fillRect(0, 0, W, H);
-
-        /* Grid */
-        ctx.strokeStyle = 'rgba(30,41,59,0.4)';
-        ctx.lineWidth = 0.5;
+        ctx.fillStyle = '#060d1a'; ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(30,41,59,0.4)'; ctx.lineWidth = 0.5;
         for (var lng = -180; lng <= 180; lng += 30) {
           var x = (lng + 180) / 360 * W;
           ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -2192,8 +2754,6 @@
           var y = (90 - lat) / 180 * H;
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         }
-
-        /* Static dots for replay frame */
         var replayDots = [[39.9,116.3],[55.7,37.6],[28.6,77.2],[-23.5,-46.6],[1.3,103.8],[40.7,-74.0],[51.5,-0.1],[48.9,2.3],[37.8,-122.4]];
         replayDots.forEach(function (d, i) {
           var rx = (d[1] + 180) / 360 * W;
@@ -2202,8 +2762,7 @@
           ctx.arc(rx, ry, i < 5 ? 5 : 3, 0, Math.PI * 2);
           ctx.fillStyle = i < 5 ? 'rgba(233,69,96,0.8)' : 'rgba(71,85,105,0.5)';
           if (i < 5) { ctx.shadowColor = '#e94560'; ctx.shadowBlur = 8; }
-          ctx.fill();
-          ctx.shadowBlur = 0;
+          ctx.fill(); ctx.shadowBlur = 0;
         });
       }
       draw();
@@ -2211,68 +2770,98 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       CRITICAL EVENTS TABLE
+       CRITICAL EVENTS TABLE (#2 row click, #16 sparklines, #17 case button)
     ══════════════════════════════════════════════════════ */
-    var DEMO_EVENTS = [
-      { ts:'2026-06-15 14:32:01', ip:'45.142.212.18', cc:'CN', route:'/api/auth/login', reason:'wrong_password', score:94 },
-      { ts:'2026-06-15 14:31:48', ip:'185.220.101.47', cc:'RU', route:'/api/auth/token', reason:'account_locked', score:88 },
-      { ts:'2026-06-15 14:31:22', ip:'103.88.45.201', cc:'IN', route:'/api/auth/login', reason:'user_not_found', score:83 },
-      { ts:'2026-06-15 14:30:55', ip:'198.54.117.66', cc:'US', route:'/admin', reason:'wrong_password', score:81 },
-      { ts:'2026-06-15 14:30:11', ip:'177.93.11.83', cc:'BR', route:'/api/auth/login', reason:'wrong_password', score:80 },
-      { ts:'2026-06-15 14:29:47', ip:'91.108.4.22', cc:'NL', route:'/api/auth/login', reason:'wrong_password', score:82 },
-      { ts:'2026-06-15 14:29:02', ip:'5.188.206.14', cc:'RU', route:'/api/reset', reason:'token_expired', score:85 },
-    ];
-
-    function sevClass(score) {
-      if (score >= 80) return 'sev-critical';
-      if (score >= 60) return 'sev-high';
-      if (score >= 40) return 'sev-med';
-      return 'sev-low';
-    }
-    function sevLabel(score) {
-      if (score >= 80) return '▲ Critical';
-      if (score >= 60) return '● High';
-      if (score >= 40) return '◆ Med';
-      return '■ Low';
-    }
-
-    function renderCriticalEvents() {
+    function renderCriticalEvents(events) {
+      if (!events) events = DEMO_EVENTS;
       var tbody = document.getElementById('critical-events-body');
       if (!tbody) return;
-      tbody.innerHTML = DEMO_EVENTS.map(function (ev) {
+      tbody.innerHTML = events.map(function (ev) {
         var sc = sevClass(ev.score);
         var sl = sevLabel(ev.score);
-        return '<tr>' +
+        /* #16: 7-point sparkline */
+        var sparkData = [ev.score - 10, ev.score - 5, ev.score - 8, ev.score - 3, ev.score - 6, ev.score - 2, ev.score];
+        var sparkMax = Math.max.apply(null, sparkData);
+        var sparkMin = Math.min.apply(null, sparkData);
+        var sparkRange = sparkMax - sparkMin || 1;
+        var sparkW = 44; var sparkH = 18;
+        var sparkPts = sparkData.map(function (v, i) {
+          var sx = Math.round(i * sparkW / 6);
+          var sy = Math.round(sparkH - ((v - sparkMin) / sparkRange) * sparkH);
+          return sx + ',' + sy;
+        }).join(' ');
+        var sparkSvg = '<svg width="' + sparkW + '" height="' + sparkH + '" class="row-sparkline" aria-hidden="true"><polyline points="' + sparkPts + '" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+
+        return '<tr title="Click to inspect" data-ip="' + ev.ip + '" data-ts="' + ev.ts + '" data-route="' + ev.route + '" data-score="' + ev.score + '" data-cc="' + ev.cc + '">' +
           '<td class="ts-meta">' + ev.ts + '</td>' +
           '<td class="mono">' + ev.ip + '</td>' +
           '<td>' + ev.cc + '</td>' +
           '<td class="mono" style="font-size:11px">' + ev.route + '</td>' +
           '<td class="mono" style="font-size:11px">' + ev.reason + '</td>' +
           '<td><span class="sev-badge ' + sc + '" aria-label="Score ' + ev.score + ': ' + sl + '">' + sl + ' ' + ev.score + '</span></td>' +
+          '<td>' + sparkSvg + '</td>' +
           '<td style="white-space:nowrap">' +
-          '<button class="btn btn-ghost btn-sm">Probe</button> ' +
-          '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + ev.ip + '\')">Block</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showToast(\'Probing \'+this.closest(\'tr\').dataset.ip)">Probe</button> ' +
+          '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();quickBlock(this.closest(\'tr\').dataset.ip)">Block</button> ' +
+          '<button class="btn btn-case btn-sm" onclick="event.stopPropagation();openCaseModal(this.closest(\'tr\'))">Case +</button>' +
           '</td>' +
           '</tr>';
       }).join('');
+
+      /* #2: row click → evidence rail */
+      tbody.querySelectorAll('tr').forEach(function (row) {
+        row.addEventListener('click', function () {
+          tbody.querySelectorAll('tr').forEach(function (r) { r.classList.remove('row-selected'); });
+          row.classList.add('row-selected');
+          populateEvidence(row.dataset.ip, row.dataset.ts, row.dataset.route, row.dataset.score, row.dataset.cc);
+        });
+      });
+    }
+
+    /* #2: populate Evidence rail */
+    function populateEvidence(ip, ts, route, score, cc) {
+      var enrich = IP_ENRICHMENT[ip] || { asn:'Unknown ASN', country:cc, repScore:parseInt(score,10), pattern:'Unknown', hits24h:'—' };
+      var html =
+        '<div class="evidence-row"><span class="evidence-key">IP</span><span class="evidence-val">' + ip + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Country</span><span class="evidence-val">' + enrich.country + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">ASN</span><span class="evidence-val">' + enrich.asn + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Reputation</span><span class="evidence-val"><span class="sev-badge ' + sevClass(parseInt(score,10)) + '">' + sevGlyph(parseInt(score,10)) + ' ' + enrich.repScore + '/100</span></span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Pattern</span><span class="evidence-val">' + enrich.pattern + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Route</span><span class="evidence-val">' + route + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Hits (24h)</span><span class="evidence-val">' + enrich.hits24h + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Timestamp</span><span class="evidence-val">' + ts + '</span></div>' +
+        '<div class="evidence-actions">' +
+        '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + ip + '\')">Block IP</button>' +
+        '<button class="btn btn-case btn-sm" onclick="openCaseModalDirect(\'' + ip + '\',\'' + ts + '\',\'' + route + '\',\'' + score + '\',\'' + cc + '\')">Case +</button>' +
+        '</div>';
+
+      /* Update all evidence panels */
+      ['live-map','event-feed','threat-intel','statistics','blocklist'].forEach(function (tab) {
+        var ghost = document.getElementById('evidence-' + tab + '-ghost');
+        var data = document.getElementById('evidence-' + tab + '-data');
+        var hint = document.getElementById('evidence-' + tab + '-hint');
+        if (ghost) ghost.style.display = 'none';
+        if (hint) hint.style.display = 'none';
+        if (data) { data.style.display = 'flex'; data.innerHTML = html; }
+      });
     }
 
     /* ══════════════════════════════════════════════════════
        BLOCKLIST
     ══════════════════════════════════════════════════════ */
     var DEMO_BLOCKS = [
-      { ip:'45.142.212.0/24', type:'CIDR', reason:'Credential stuffing campaign', at:'2026-06-15 12:00', exp:'2026-06-16 12:00' },
-      { ip:'185.220.101.47', type:'IP', reason:'Brute force — 300 failures / 5min', at:'2026-06-15 11:45', exp:'Permanent' },
-      { ip:'CN', type:'Country', reason:'Geo-block — elevated threat level', at:'2026-06-14 09:00', exp:'2026-06-21 09:00' },
-      { ip:'103.88.45.201', type:'IP', reason:'Spamhaus DROP match', at:'2026-06-15 10:22', exp:'2026-06-16 10:22' },
-      { ip:'5.188.206.0/24', type:'CIDR', reason:'Known Tor exit range', at:'2026-06-13 08:00', exp:'Permanent' },
+      { ip:'45.142.212.0/24', type:'CIDR',    reason:'Credential stuffing campaign',         at:'2026-06-15 12:00', exp:'2026-06-16 12:00' },
+      { ip:'185.220.101.47',  type:'IP',       reason:'Brute force — 300 failures / 5min',   at:'2026-06-15 11:45', exp:'Permanent'        },
+      { ip:'CN',              type:'Country',  reason:'Geo-block — elevated threat level',    at:'2026-06-14 09:00', exp:'2026-06-21 09:00' },
+      { ip:'103.88.45.201',   type:'IP',       reason:'Spamhaus DROP match',                  at:'2026-06-15 10:22', exp:'2026-06-16 10:22' },
+      { ip:'5.188.206.0/24',  type:'CIDR',     reason:'Known Tor exit range',                 at:'2026-06-13 08:00', exp:'Permanent'        },
     ];
 
     function renderBlocklist() {
       var tbody = document.getElementById('blocklist-body');
       if (!tbody) return;
       tbody.innerHTML = DEMO_BLOCKS.map(function (b) {
-        return '<tr>' +
+        return '<tr data-ip="' + b.ip + '">' +
           '<td class="mono">' + b.ip + '</td>' +
           '<td><span class="sev-badge ' + (b.type === 'Country' ? 'sev-high' : 'sev-none') + '">' + b.type + '</span></td>' +
           '<td style="color:var(--text-secondary);font-size:12px">' + b.reason + '</td>' +
@@ -2281,6 +2870,14 @@
           '<td><button class="btn btn-danger btn-sm" onclick="removeBlock(this)">Remove</button></td>' +
           '</tr>';
       }).join('');
+      /* #2: blocklist row click → evidence */
+      tbody.querySelectorAll('tr').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          if (e.target.tagName === 'BUTTON') return;
+          var ip = row.dataset.ip;
+          populateEvidence(ip, new Date().toISOString().replace('T',' ').slice(0,19), '/blocklist', '50', '??');
+        });
+      });
       updateBlocklistEmpty();
     }
 
@@ -2288,8 +2885,7 @@
       var tbody = document.getElementById('blocklist-body');
       var empty = document.getElementById('blocklist-empty');
       if (!tbody || !empty) return;
-      var hasRows = tbody.querySelectorAll('tr').length > 0;
-      empty.style.display = hasRows ? 'none' : 'flex';
+      empty.style.display = tbody.querySelectorAll('tr').length > 0 ? 'none' : 'flex';
     }
 
     function handleBlockIP() {
@@ -2303,7 +2899,7 @@
     }
 
     function quickBlock(ip) {
-      showToast('Blocked: ' + ip + ' (24 hours)', 'success');
+      showToast('▲ Blocked: ' + ip + ' (24 hours)', 'success');
     }
 
     function removeBlock(btn) {
@@ -2317,9 +2913,9 @@
        RULES
     ══════════════════════════════════════════════════════ */
     var TEMPLATES = {
-      brute:   { name:'Brute Force Alert', count:20, window:60, cooldown:300, action:'Alert + Block IP' },
-      stuffing:{ name:'Credential Stuffing', count:100, window:300, cooldown:600, action:'Alert Only' },
-      anomaly: { name:'High Anomaly Score', count:1, window:0, cooldown:60, action:'Alert Only' }
+      brute:   { name:'Brute Force Alert',     count:20,  window:60,  cooldown:300, action:'Alert + Block IP' },
+      stuffing:{ name:'Credential Stuffing',   count:100, window:300, cooldown:600, action:'Alert Only'       },
+      anomaly: { name:'High Anomaly Score',    count:1,   window:0,   cooldown:60,  action:'Alert Only'       }
     };
 
     function applyTemplate(tpl) {
@@ -2348,35 +2944,21 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       HEATMAP
+       HEATMAP (#5: seeded data, tooltip, legend; #13: popover on click)
     ══════════════════════════════════════════════════════ */
     function renderHeatmap() {
       var container = document.getElementById('heatmap-container');
       if (!container) return;
-
-      var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      var hours = [];
-      for (var h = 0; h < 24; h++) hours.push(h);
-
-      /* Simulated attack counts — peak at 0-4 UTC on weekdays */
-      var data = days.map(function (d, di) {
-        return hours.map(function (h) {
-          var base = (di < 5 ? 1 : 0.4);
-          var nightBoost = (h >= 0 && h <= 4) ? 2.5 : 1;
-          return Math.round(base * nightBoost * (200 + Math.random() * 800));
-        });
-      });
-
+      var hours = []; for (var h = 0; h < 24; h++) hours.push(h);
       var max = 0;
-      data.forEach(function (row) { row.forEach(function (v) { max = Math.max(max, v); }); });
+      HEATMAP_DATA.forEach(function (row) { row.forEach(function (v) { max = Math.max(max, v); }); });
 
       var table = document.createElement('table');
       table.style.cssText = 'border-collapse:collapse;width:100%;table-layout:fixed';
 
-      /* Hour header row */
+      /* Hour header */
       var hdrRow = document.createElement('tr');
-      var emptyTh = document.createElement('th');
-      emptyTh.style.cssText = 'width:36px';
+      var emptyTh = document.createElement('th'); emptyTh.style.cssText = 'width:36px';
       hdrRow.appendChild(emptyTh);
       hours.forEach(function (h) {
         var th = document.createElement('th');
@@ -2386,26 +2968,28 @@
       });
       table.appendChild(hdrRow);
 
-      /* Data rows */
-      data.forEach(function (row, di) {
+      HEATMAP_DATA.forEach(function (row, di) {
         var tr = document.createElement('tr');
         var dayTd = document.createElement('td');
         dayTd.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--text-muted);padding-right:6px;white-space:nowrap';
-        dayTd.textContent = days[di];
+        dayTd.textContent = HEATMAP_DAYS[di];
         tr.appendChild(dayTd);
 
-        row.forEach(function (val) {
+        row.forEach(function (val, hi) {
           var td = document.createElement('td');
           var ratio = val / max;
           var alpha = 0.08 + ratio * 0.92;
-          /* Color from low (green) through yellow to red */
           var r = Math.round(34 + (239 - 34) * ratio);
           var g = Math.round(197 + (68 - 197) * ratio);
           var b = Math.round(94 + (68 - 94) * ratio);
-          td.style.cssText = 'background:rgba(' + r + ',' + g + ',' + b + ',' + alpha + ');border-radius:2px;padding:3px;cursor:default;transition:opacity 0.2s';
-          td.title = val + ' events';
+          td.style.cssText = 'background:rgba(' + r + ',' + g + ',' + b + ',' + alpha + ');border-radius:2px;padding:3px;cursor:pointer;transition:opacity 0.2s';
+          /* #5: rich title tooltip */
+          var routeIdx = Math.floor(ratio * 3);
+          td.title = HEATMAP_DAYS[di] + ' ' + (hi < 10 ? '0' + hi : hi) + ':00 — ' + val + ' events';
           td.setAttribute('role', 'gridcell');
-          td.setAttribute('aria-label', val + ' attacks');
+          td.setAttribute('aria-label', val + ' attacks ' + HEATMAP_DAYS[di] + ' ' + hi + ':00');
+          /* #13: click popover */
+          td.addEventListener('click', function (e) { showHeatmapPopover(e, HEATMAP_DAYS[di], hi, val, routeIdx); });
           td.addEventListener('mouseenter', function () { td.style.opacity = '0.75'; });
           td.addEventListener('mouseleave', function () { td.style.opacity = '1'; });
           tr.appendChild(td);
@@ -2415,6 +2999,27 @@
 
       container.innerHTML = '';
       container.appendChild(table);
+
+      /* close popover on outside click */
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('#heatmap-container')) hideHeatmapPopover();
+      });
+    }
+
+    /* #13: heatmap popover */
+    function showHeatmapPopover(e, day, hour, count, routeIdx) {
+      e.stopPropagation();
+      var pop = document.getElementById('heatmap-popover');
+      document.getElementById('hp-title').textContent = day + ' ' + (hour < 10 ? '0' + hour : hour) + ':00 UTC';
+      document.getElementById('hp-count').textContent = count.toLocaleString() + ' events';
+      document.getElementById('hp-route').textContent = HEATMAP_ROUTES[routeIdx] || '/api/auth/login';
+      document.getElementById('hp-sev').textContent = count > 500 ? '▲ Critical' : count > 300 ? '● High' : count > 150 ? '◆ Med' : '■ Low';
+      pop.style.left = Math.min(e.clientX + 10, window.innerWidth - 220) + 'px';
+      pop.style.top = Math.max(e.clientY - 80, 60) + 'px';
+      pop.classList.add('visible');
+    }
+    function hideHeatmapPopover() {
+      document.getElementById('heatmap-popover').classList.remove('visible');
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2423,46 +3028,32 @@
     function renderEventTimelineChart() {
       var wrap = document.getElementById('event-timeline-chart');
       if (!wrap) return;
-
       var W = wrap.clientWidth || 300;
       var H = 100;
-      var points = [120, 180, 240, 310, 420, 380, 290, 220, 340, 510, 680, 590, 420, 310, 280, 350, 420, 580, 640, 510, 390, 280, 240, 320];
+      var points = [120,180,240,310,420,380,290,220,340,510,680,590,420,310,280,350,420,580,640,510,390,280,240,320];
       var maxP = Math.max.apply(null, points);
-      var pad = { t: 10, r: 10, b: 30, l: 32 };
-      var iW = W - pad.l - pad.r;
-      var iH = H - pad.t - pad.b;
-
+      var pad = { t:10, r:10, b:30, l:32 };
+      var iW = W - pad.l - pad.r; var iH = H - pad.t - pad.b;
       var xStep = iW / (points.length - 1);
-      var coords = points.map(function (v, i) {
-        return [pad.l + i * xStep, pad.t + iH - (v / maxP) * iH];
-      });
-
+      var coords = points.map(function (v, i) { return [pad.l + i * xStep, pad.t + iH - (v / maxP) * iH]; });
       var pathD = coords.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
-      var fillD = pathD + ' L' + coords[coords.length - 1][0].toFixed(1) + ',' + (pad.t + iH) + ' L' + pad.l + ',' + (pad.t + iH) + ' Z';
-
-      /* Grid lines */
+      var fillD = pathD + ' L' + coords[coords.length-1][0].toFixed(1) + ',' + (pad.t+iH) + ' L' + pad.l + ',' + (pad.t+iH) + ' Z';
       var gridLines = '';
       [0, 0.25, 0.5, 0.75, 1].forEach(function (frac) {
         var y = pad.t + iH * (1 - frac);
         var label = Math.round(maxP * frac);
-        gridLines += '<line x1="' + pad.l + '" y1="' + y.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + y.toFixed(1) + '" stroke="rgba(30,41,59,0.8)" stroke-width="0.5"/>';
-        gridLines += '<text x="' + (pad.l - 4) + '" y="' + (y + 3).toFixed(1) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#475569" text-anchor="end">' + (label >= 1000 ? (label/1000).toFixed(1)+'k' : label) + '</text>';
+        gridLines += '<line x1="' + pad.l + '" y1="' + y.toFixed(1) + '" x2="' + (W-pad.r) + '" y2="' + y.toFixed(1) + '" stroke="rgba(30,41,59,0.8)" stroke-width="0.5"/>';
+        gridLines += '<text x="' + (pad.l-4) + '" y="' + (y+3).toFixed(1) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#7c8fa6" text-anchor="end">' + (label >= 1000 ? (label/1000).toFixed(1)+'k' : label) + '</text>';
       });
-
-      /* X-axis labels */
       var xLabels = '';
-      [0, 6, 12, 18, 23].forEach(function (i) {
+      [0,6,12,18,23].forEach(function (i) {
         var x = pad.l + i * xStep;
-        xLabels += '<text x="' + x.toFixed(1) + '" y="' + (H - 6) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#475569" text-anchor="middle">' + (i < 10 ? '0' + i : i) + ':00</text>';
+        xLabels += '<text x="' + x.toFixed(1) + '" y="' + (H-6) + '" font-family="JetBrains Mono,monospace" font-size="8" fill="#7c8fa6" text-anchor="middle">' + (i<10?'0'+i:i) + ':00</text>';
       });
-
       wrap.innerHTML = '<svg width="100%" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
         '<defs><linearGradient id="lgFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e94560" stop-opacity="0.3"/><stop offset="100%" stop-color="#e94560" stop-opacity="0.02"/></linearGradient></defs>' +
-        gridLines +
-        '<path d="' + fillD + '" fill="url(#lgFill)"/>' +
-        '<path d="' + pathD + '" fill="none" stroke="#e94560" stroke-width="1.5"/>' +
-        xLabels +
-        '</svg>';
+        gridLines + '<path d="' + fillD + '" fill="url(#lgFill)"/>' +
+        '<path d="' + pathD + '" fill="none" stroke="#e94560" stroke-width="1.5"/>' + xLabels + '</svg>';
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2471,33 +3062,26 @@
     function renderSeverityDonut() {
       var wrap = document.getElementById('severity-donut-wrap');
       if (!wrap) return;
-
       var slices = [
-        { label: 'Critical', pct: 22, color: 'var(--sev-critical)', hex: '#ef4444' },
-        { label: 'High',     pct: 35, color: 'var(--sev-high)',     hex: '#f97316' },
-        { label: 'Medium',   pct: 28, color: 'var(--sev-med)',      hex: '#eab308' },
-        { label: 'Low',      pct: 15, color: 'var(--sev-low)',      hex: '#22c55e' }
+        { label:'Critical', pct:22, hex:'#ef4444', glyph:'▲' },
+        { label:'High',     pct:35, hex:'#f97316', glyph:'●' },
+        { label:'Medium',   pct:28, hex:'#eab308', glyph:'◆' },
+        { label:'Low',      pct:15, hex:'#22c55e', glyph:'■' }
       ];
-
       var r = 42; var cx = 56; var cy = 56; var strokeW = 14;
-      var circumference = 2 * Math.PI * r;
-      var offset = 0;
+      var circ = 2 * Math.PI * r; var offset = 0;
       var circles = slices.map(function (s) {
-        var dash = (s.pct / 100) * circumference;
-        var gap = circumference - dash;
-        var rotate = (offset / 100) * 360 - 90;
-        offset += s.pct;
+        var dash = (s.pct/100)*circ; var gap = circ-dash;
+        var rotate = (offset/100)*360 - 90; offset += s.pct;
         return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + s.hex + '" stroke-width="' + strokeW + '" stroke-dasharray="' + dash.toFixed(2) + ' ' + gap.toFixed(2) + '" stroke-dashoffset="0" transform="rotate(' + rotate + ' ' + cx + ' ' + cy + ')" stroke-linecap="butt"/>';
       }).join('');
-
+      /* #20: consistent glyphs in legend */
       var legend = slices.map(function (s) {
-        return '<div class="donut-legend-row"><div class="donut-legend-dot" style="background:' + s.hex + '"></div><span>' + s.label + '</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text-primary)">' + s.pct + '%</span></div>';
+        return '<div class="donut-legend-row"><div class="donut-legend-dot" style="background:' + s.hex + '"></div><span>' + s.glyph + ' ' + s.label + '</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text-primary)">' + s.pct + '%</span></div>';
       }).join('');
-
       wrap.innerHTML = '<svg width="112" height="112" viewBox="0 0 112 112" style="flex-shrink:0">' + circles +
-        '<text x="' + cx + '" y="' + (cy + 5) + '" font-family="Syne,sans-serif" font-size="14" font-weight="700" fill="#f1f5f9" text-anchor="middle">Severity</text>' +
-        '</svg>' +
-        '<div class="donut-legend" style="flex:1">' + legend + '</div>';
+        '<text x="' + cx + '" y="' + (cy+5) + '" font-family="Syne,sans-serif" font-size="14" font-weight="700" fill="#f1f5f9" text-anchor="middle">Sev</text>' +
+        '</svg><div class="donut-legend" style="flex:1">' + legend + '</div>';
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2517,21 +3101,187 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       REPLAY CONTROLS
+       SORTABLE TABLES (#10)
+    ══════════════════════════════════════════════════════ */
+    var sortStates = {};
+    function sortTable(tableId, colIdx, th) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var key = tableId + '-' + colIdx;
+      var dir = sortStates[key];
+      if (dir === 'asc') { dir = 'desc'; } else if (dir === 'desc') { dir = null; } else { dir = 'asc'; }
+      sortStates[key] = dir;
+      /* reset all headers in this table */
+      table.querySelectorAll('th').forEach(function (h) {
+        h.classList.remove('sort-asc','sort-desc');
+        var arr = h.querySelector('.sort-arrow');
+        if (arr) arr.textContent = '↕';
+      });
+      if (!dir) { return; }
+      th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      var arr = th.querySelector('.sort-arrow');
+      if (arr) arr.textContent = dir === 'asc' ? '↑' : '↓';
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort(function (a, b) {
+        var aVal = (a.cells[colIdx] || {}).textContent || '';
+        var bVal = (b.cells[colIdx] || {}).textContent || '';
+        var aNum = parseFloat(aVal.replace(/[^0-9.-]/g,''));
+        var bNum = parseFloat(bVal.replace(/[^0-9.-]/g,''));
+        var cmp;
+        if (!isNaN(aNum) && !isNaN(bNum)) { cmp = aNum - bNum; }
+        else { cmp = aVal.localeCompare(bVal); }
+        return dir === 'asc' ? cmp : -cmp;
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    }
+
+    /* ══════════════════════════════════════════════════════
+       GLOBAL SEARCH (#11)
+    ══════════════════════════════════════════════════════ */
+    var searchDebounce = null;
+    function initGlobalSearch() {
+      var input = document.getElementById('global-search');
+      var clearBtn = document.getElementById('global-search-clear');
+      if (!input) return;
+      input.addEventListener('input', function () {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(function () { doGlobalSearch(input.value.trim()); }, 200);
+        clearBtn.style.display = input.value ? 'block' : 'none';
+      });
+      /* / shortcut to focus */
+      document.addEventListener('keydown', function (e) {
+        if (e.key === '/' && document.activeElement !== input && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault(); input.focus();
+        }
+      });
+    }
+
+    function clearGlobalSearch() {
+      var input = document.getElementById('global-search');
+      if (input) { input.value = ''; doGlobalSearch(''); }
+      var clearBtn = document.getElementById('global-search-clear');
+      if (clearBtn) clearBtn.style.display = 'none';
+    }
+
+    function doGlobalSearch(term) {
+      var badge = document.getElementById('global-search-badge');
+      var termL = term.toLowerCase();
+      var totalMatches = 0;
+      document.querySelectorAll('.tab-pane').forEach(function (pane) {
+        pane.querySelectorAll('tbody tr').forEach(function (row) {
+          var text = row.textContent.toLowerCase();
+          if (!term) {
+            row.classList.remove('search-hidden','search-match');
+          } else if (text.includes(termL)) {
+            row.classList.remove('search-hidden');
+            row.classList.add('search-match');
+            totalMatches++;
+          } else {
+            row.classList.add('search-hidden');
+            row.classList.remove('search-match');
+          }
+        });
+      });
+      if (term && badge) {
+        badge.textContent = totalMatches;
+        badge.style.display = totalMatches > 0 ? 'block' : 'none';
+      } else if (badge) {
+        badge.style.display = 'none';
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       CASE MODAL (#17)
+    ══════════════════════════════════════════════════════ */
+    var currentCaseData = null;
+
+    function openCaseModal(row) {
+      openCaseModalDirect(row.dataset.ip, row.dataset.ts, row.dataset.route, row.dataset.score, row.dataset.cc);
+    }
+
+    function openCaseModalDirect(ip, ts, route, score, cc) {
+      currentCaseData = { ip:ip, timestamp:ts, route:route, severity:sevLabel(parseInt(score,10)), country:cc, score:score, caseId:'CASE-' + Date.now() };
+      var fields = document.getElementById('case-modal-fields');
+      fields.innerHTML = Object.keys(currentCaseData).map(function (k) {
+        return '<div class="modal-field"><span class="modal-field-key">' + k + '</span><span class="modal-field-val">' + currentCaseData[k] + '</span></div>';
+      }).join('');
+      document.getElementById('case-modal').classList.add('visible');
+    }
+
+    function closeCaseModal() {
+      document.getElementById('case-modal').classList.remove('visible');
+      currentCaseData = null;
+    }
+
+    function copyCaseToClipboard() {
+      if (!currentCaseData) return;
+      var json = JSON.stringify(currentCaseData, null, 2);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(json).then(function () { showToast('Case JSON copied to clipboard', 'success'); });
+      } else {
+        showToast('JSON: ' + json.slice(0, 80) + '…');
+      }
+      closeCaseModal();
+    }
+
+    /* ══════════════════════════════════════════════════════
+       REPLAY CONTROLS (#18: functional scrubber)
     ══════════════════════════════════════════════════════ */
     var replayPlaying = false;
     var replayProgress = 0.38;
     var replayInterval = null;
     var replaySpeed = 1;
+    var REPLAY_TOTAL_FRAMES = 168;
+    var REPLAY_START_MS = new Date('2026-06-08T00:00:00Z').getTime();
+    var REPLAY_RANGE_MS = 7 * 24 * 3600 * 1000;
+
+    function initReplayScrubber() {
+      var track = document.getElementById('scrubber-track');
+      if (!track) return;
+      var thumb = document.getElementById('scrubber-thumb');
+      var dragging = false;
+
+      track.addEventListener('click', function (e) {
+        if (dragging) return;
+        var rect = track.getBoundingClientRect();
+        replayProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        updateScrubber(replayProgress);
+      });
+
+      thumb.addEventListener('mousedown', function (e) {
+        dragging = true;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        var rect = track.getBoundingClientRect();
+        replayProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        updateScrubber(replayProgress);
+      });
+      document.addEventListener('mouseup', function () { dragging = false; });
+
+      /* touch support */
+      thumb.addEventListener('touchstart', function (e) { dragging = true; e.preventDefault(); }, { passive:false });
+      document.addEventListener('touchmove', function (e) {
+        if (!dragging) return;
+        var rect = track.getBoundingClientRect();
+        replayProgress = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+        updateScrubber(replayProgress);
+      });
+      document.addEventListener('touchend', function () { dragging = false; });
+
+      updateScrubber(replayProgress);
+    }
 
     function toggleReplay() {
       replayPlaying = !replayPlaying;
       if (replayPlaying) {
         replayInterval = setInterval(function () {
-          replayProgress += 0.002 * replaySpeed;
+          replayProgress += (1 / REPLAY_TOTAL_FRAMES) * replaySpeed;
           if (replayProgress >= 1) { replayProgress = 0; }
           updateScrubber(replayProgress);
-        }, 100);
+        }, 500);
         document.getElementById('replay-play-btn').innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M10 9v6m4-6v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
       } else {
         clearInterval(replayInterval);
@@ -2543,21 +3293,16 @@
       var fill = document.getElementById('scrubber-fill');
       var thumb = document.getElementById('scrubber-thumb');
       var ts = document.getElementById('scrubber-ts');
+      var frameEl = document.getElementById('replay-frame-counter');
+      var canvasTs = document.getElementById('replay-canvas-ts');
       if (fill) fill.style.width = (pct * 100).toFixed(1) + '%';
       if (thumb) thumb.style.left = (pct * 100).toFixed(1) + '%';
-      if (ts) {
-        var baseMs = new Date('2026-06-08T00:00:00Z').getTime();
-        var rangeMs = 7 * 24 * 3600 * 1000;
-        var d = new Date(baseMs + pct * rangeMs);
-        ts.textContent = d.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-      }
-    }
-
-    function handleScrubberClick(e) {
-      var track = document.getElementById('scrubber-track');
-      var rect = track.getBoundingClientRect();
-      replayProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      updateScrubber(replayProgress);
+      var d = new Date(REPLAY_START_MS + pct * REPLAY_RANGE_MS);
+      var tsStr = d.toISOString().replace('T',' ').slice(0,16) + ' UTC';
+      var frame = Math.round(pct * REPLAY_TOTAL_FRAMES);
+      if (ts) ts.textContent = tsStr;
+      if (frameEl) frameEl.textContent = frame + ' / ' + REPLAY_TOTAL_FRAMES;
+      if (canvasTs) canvasTs.textContent = 'Frame ' + frame + ' / ' + REPLAY_TOTAL_FRAMES + ' — ' + tsStr;
     }
 
     function setSpeed(el, speed) {
@@ -2572,7 +3317,7 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       API FETCH (for live backend)
+       API FETCH
     ══════════════════════════════════════════════════════ */
     function apiFetch(path) {
       if (!CONFIG.BASE_URL) return Promise.resolve(null);
