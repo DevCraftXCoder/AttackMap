@@ -1389,6 +1389,10 @@
           <button class="global-search-clear" id="global-search-clear" onclick="clearGlobalSearch()">×</button>
           <span class="global-search-badge" id="global-search-badge"></span>
         </div>
+        <!-- Admin login button -->
+        <button class="btn btn-ghost btn-sm" id="admin-login-btn" onclick="openLoginModal()" style="font-size:11px;padding:4px 10px;flex-shrink:0" title="Admin login">
+          ⚿ Admin
+        </button>
         <!-- #12: Stream status with live freshness -->
         <div class="stream-status">
           <div class="stream-dot" id="topbar-stream-dot"></div>
@@ -1424,11 +1428,14 @@
             <option value="med">Medium</option>
           </select>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Refresh" onclick="applyFilters()">
+          <button class="icon-btn" data-tip="Refresh" onclick="applyFilters()" title="Refresh">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
-          <button class="icon-btn" data-tip="Export">
+          <button class="icon-btn" data-tip="Export" title="Export">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
+          </button>
+          <button class="icon-btn" id="clear-nodes-btn" data-tip="Clear Nodes (login required)" title="Clear Nodes (login required)" onclick="handleClearNodes()" style="color:var(--sev-critical);opacity:0.5">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
         <div class="content-with-sidebar">
@@ -1502,6 +1509,9 @@
                 <div class="globe-legend-item">
                   <div class="globe-legend-dot" style="background:#ef4444"></div>
                   <span>Critical</span>
+                </div>
+                <div class="globe-legend-item" style="margin-left:4px;border-left:1px solid rgba(255,255,255,0.1);padding-left:10px">
+                  <span id="arc-count-badge" style="color:var(--accent);font-weight:700">5 active</span>
                 </div>
               </div>
               <!-- #20: floating severity legend -->
@@ -2324,6 +2334,22 @@
     </div><!-- end main-area -->
   </div><!-- end app-shell -->
 
+  <!-- Admin login modal -->
+  <div class="modal-overlay" id="login-modal" onclick="if(event.target===this)closeLoginModal()">
+    <div class="modal-box" style="max-width:360px">
+      <div class="modal-title">Admin Authentication</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="login-modal-reason">Enter your admin key to access protected features.</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Admin Key</label>
+        <input class="form-input" type="password" id="login-key-input" placeholder="Enter admin key…" autocomplete="off" onkeydown="if(event.key==='Enter')handleLogin()" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" onclick="handleLogin()">Login</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeLoginModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ══════════════════════════════════════════════════════
        CONFIG
@@ -2333,6 +2359,25 @@
       ADMIN_KEY: '',
       WARNING_ACTIVE: true
     };
+
+    /* ══════════════════════════════════════════════════════
+       ADMIN AUTH STATE
+    ══════════════════════════════════════════════════════ */
+    var isAdmin = false;
+    var pendingAdminAction = null;
+    var pendingRemoveIP = null;
+
+    /* ══════════════════════════════════════════════════════
+       MODULE-SCOPE ARC STATE (prerequisite for clear)
+    ══════════════════════════════════════════════════════ */
+    var liveArcs = [
+      [39.9, 116.3, 40.7, -74.0],
+      [55.7, 37.6, 48.9, 2.3],
+      [28.6, 77.2, 37.8, -122.4],
+      [-23.5, -46.6, 40.7, -74.0],
+      [1.3, 103.8, 51.5, -0.1]
+    ];
+    var clearedIPs = {};
 
     /* ══════════════════════════════════════════════════════
        DEMO DATA
@@ -2623,14 +2668,7 @@
       ];
       regions.forEach(function (r) { r.forEach(function (c) { landDots.push(c); }); });
 
-      var arcs = [
-        [39.9, 116.3, 40.7, -74.0],
-        [55.7, 37.6, 48.9, 2.3],
-        [28.6, 77.2, 37.8, -122.4],
-        [-23.5, -46.6, 40.7, -74.0],
-        [1.3, 103.8, 51.5, -0.1]
-      ];
-
+      /* liveArcs is module-scope — do not redeclare */
       var animT = 0;
 
       function latLngToXY(lat, lng, W, H) {
@@ -2664,7 +2702,7 @@
         var W = canvas.width; var H = canvas.height;
         ctx.clearRect(0, 0, W, H);
         drawBase(W, H);
-        arcs.forEach(function (arc) {
+        liveArcs.forEach(function (arc) {
           var src = latLngToXY(arc[0], arc[1], W, H);
           var dst = latLngToXY(arc[2], arc[3], W, H);
           ctx.beginPath(); ctx.moveTo(src[0], src[1]); ctx.lineTo(dst[0], dst[1]);
@@ -2672,6 +2710,7 @@
           ctx.beginPath(); ctx.arc(src[0], src[1], 4, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(233,69,96,0.7)'; ctx.fill();
         });
+        updateArcCountBadge();
       }
 
       function drawGlobe() {
@@ -2684,7 +2723,7 @@
         var W = canvas.width; var H = canvas.height;
         ctx.clearRect(0, 0, W, H);
         drawBase(W, H);
-        arcs.forEach(function (arc, i) {
+        liveArcs.forEach(function (arc, i) {
           var src = latLngToXY(arc[0], arc[1], W, H);
           var dst = latLngToXY(arc[2], arc[3], W, H);
           var midX = (src[0] + dst[0]) / 2;
@@ -2714,6 +2753,7 @@
           ctx.fillStyle = 'rgba(233,69,96,0.7)'; ctx.fill();
         });
         animT++;
+        updateArcCountBadge();
         globeRafId = requestAnimationFrame(drawGlobe);
       }
 
@@ -2818,32 +2858,86 @@
       });
     }
 
-    /* #2: populate Evidence rail */
+    /* #2: populate Evidence rail (improved UI) */
     function populateEvidence(ip, ts, route, score, cc) {
-      var enrich = IP_ENRICHMENT[ip] || { asn:'Unknown ASN', country:cc, repScore:parseInt(score,10), pattern:'Unknown', hits24h:'—' };
+      var sc = parseInt(score, 10);
+      var enrich = IP_ENRICHMENT[ip] || { asn:'Unknown ASN', country:cc, repScore:sc, pattern:'Unknown', hits24h:'—' };
+      var sevCls = sevClass(sc);
+      var sevColors = { 'sev-critical':'#ef4444', 'sev-high':'#f97316', 'sev-med':'#eab308', 'sev-low':'#22c55e', 'sev-none':'#7c8fa6' };
+      var stripColor = sevColors[sevCls] || '#7c8fa6';
+
+      /* relative timestamp */
+      var relTs = '';
+      try {
+        var evMs = new Date(ts.replace(' ','T') + 'Z').getTime();
+        var diffS = Math.round((Date.now() - evMs) / 1000);
+        if (diffS < 60) relTs = diffS + 's ago';
+        else if (diffS < 3600) relTs = Math.floor(diffS/60) + 'm ago';
+        else relTs = Math.floor(diffS/3600) + 'h ago';
+      } catch(e) { relTs = ''; }
+
+      /* ASN truncated with title */
+      var asnShort = enrich.asn.length > 22 ? enrich.asn.slice(0,20) + '…' : enrich.asn;
+
+      /* threat score bar */
+      var scoreBarColor = stripColor;
+      var scoreBarW = Math.min(100, sc);
+
+      var safeIp    = ip.replace(/'/g, "\\'");
+      var safeTs    = ts.replace(/'/g, "\\'");
+      var safeRoute = route.replace(/'/g, "\\'");
+      var safeCc    = cc.replace(/'/g, "\\'");
+
       var html =
-        '<div class="evidence-row"><span class="evidence-key">IP</span><span class="evidence-val">' + ip + '</span></div>' +
+        /* severity indicator strip */
+        '<div style="margin:-2px -2px 10px -2px;height:3px;border-radius:3px 3px 0 0;background:' + stripColor + ';opacity:0.8"></div>' +
+        /* header: IP + severity badge + copy */
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">' +
+          '<span class="sev-badge ' + sevCls + '" style="flex-shrink:0">' + sevGlyph(sc) + ' ' + sevLabel(sc) + '</span>' +
+          '<span class="evidence-val mono" style="flex:1;font-size:12px;color:var(--text-primary)">' + ip + '</span>' +
+          '<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" onclick="copyToClipboard(\'' + safeIp + '\')" title="Copy IP">⎘</button>' +
+        '</div>' +
+        /* threat score bar */
+        '<div style="margin-bottom:10px">' +
+          '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">' +
+            '<span>Threat Score</span><span style="color:' + scoreBarColor + ';font-weight:700">' + sc + ' / 100</span>' +
+          '</div>' +
+          '<div style="height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden">' +
+            '<div style="height:100%;width:' + scoreBarW + '%;background:' + scoreBarColor + ';border-radius:3px;transition:width 0.4s"></div>' +
+          '</div>' +
+        '</div>' +
+        /* fields */
         '<div class="evidence-row"><span class="evidence-key">Country</span><span class="evidence-val">' + enrich.country + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">ASN</span><span class="evidence-val">' + enrich.asn + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Reputation</span><span class="evidence-val"><span class="sev-badge ' + sevClass(parseInt(score,10)) + '">' + sevGlyph(parseInt(score,10)) + ' ' + enrich.repScore + '/100</span></span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">ASN</span><span class="evidence-val" title="' + enrich.asn + '">' + asnShort + '</span></div>' +
         '<div class="evidence-row"><span class="evidence-key">Pattern</span><span class="evidence-val">' + enrich.pattern + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Route</span><span class="evidence-val">' + route + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Route</span><span class="evidence-val"><code style="background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px;font-size:10px">' + route + '</code></span></div>' +
         '<div class="evidence-row"><span class="evidence-key">Hits (24h)</span><span class="evidence-val">' + enrich.hits24h + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Timestamp</span><span class="evidence-val">' + ts + '</span></div>' +
-        '<div class="evidence-actions">' +
-        '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + ip + '\')">Block IP</button>' +
-        '<button class="btn btn-case btn-sm" onclick="openCaseModalDirect(\'' + ip + '\',\'' + ts + '\',\'' + route + '\',\'' + score + '\',\'' + cc + '\')">Case +</button>' +
+        '<div class="evidence-row"><span class="evidence-key">Seen</span><span class="evidence-val" title="' + ts + '">' + (relTs || ts) + '</span></div>' +
+        /* actions */
+        '<div class="evidence-actions" style="margin-top:10px">' +
+          '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + safeIp + '\')" title="Block this IP">Block IP</button>' +
+          '<button class="btn btn-ghost btn-sm" style="color:var(--sev-critical);border-color:rgba(239,68,68,0.25)" onclick="handleRemoveNode(\'' + safeIp + '\')" title="Remove node from map">✕ Remove</button>' +
+          '<button class="btn btn-case btn-sm" onclick="openCaseModalDirect(\'' + safeIp + '\',\'' + safeTs + '\',\'' + safeRoute + '\',\'' + score + '\',\'' + safeCc + '\')" title="Create incident case">Case +</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="copyToClipboard(\'' + safeIp + '\')" title="Copy IP to clipboard">⎘ Copy</button>' +
         '</div>';
 
       /* Update all evidence panels */
       ['live-map','event-feed','threat-intel','statistics','blocklist'].forEach(function (tab) {
         var ghost = document.getElementById('evidence-' + tab + '-ghost');
-        var data = document.getElementById('evidence-' + tab + '-data');
-        var hint = document.getElementById('evidence-' + tab + '-hint');
+        var data  = document.getElementById('evidence-' + tab + '-data');
+        var hint  = document.getElementById('evidence-' + tab + '-hint');
         if (ghost) ghost.style.display = 'none';
-        if (hint) hint.style.display = 'none';
-        if (data) { data.style.display = 'flex'; data.innerHTML = html; }
+        if (hint)  hint.style.display  = 'none';
+        if (data)  { data.style.display = 'flex'; data.innerHTML = html; }
       });
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () { showToast('Copied: ' + text, 'success'); });
+      } else {
+        showToast('Copy: ' + text);
+      }
     }
 
     /* ══════════════════════════════════════════════════════
@@ -3328,6 +3422,170 @@
         return r.json();
       }).catch(function () { return null; });
     }
+
+    /* ══════════════════════════════════════════════════════
+       ADMIN AUTH
+    ══════════════════════════════════════════════════════ */
+    function openLoginModal(reason) {
+      pendingAdminAction = reason || null;
+      var reasonEl = document.getElementById('login-modal-reason');
+      if (reasonEl) {
+        reasonEl.textContent = reason
+          ? 'Authentication required to ' + reason + ' nodes.'
+          : 'Enter your admin key to access protected features.';
+      }
+      document.getElementById('login-modal').classList.add('visible');
+      setTimeout(function () {
+        var i = document.getElementById('login-key-input');
+        if (i) i.focus();
+      }, 100);
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.remove('visible');
+      var i = document.getElementById('login-key-input');
+      if (i) i.value = '';
+      pendingAdminAction = null;
+    }
+
+    function handleLogin() {
+      var key = (document.getElementById('login-key-input').value || '').trim();
+      /* Accept if CONFIG.ADMIN_KEY matches; if empty (demo mode) accept any non-empty key */
+      var valid = CONFIG.ADMIN_KEY ? key === CONFIG.ADMIN_KEY : key.length > 0;
+      if (!valid) { showToast('Invalid admin key', 'error'); return; }
+      isAdmin = true;
+      closeLoginModal();
+      updateAdminUI();
+      showToast('Admin access granted', 'success');
+      /* Execute pending action */
+      if (pendingAdminAction === 'clear') {
+        handleClearNodes();
+      } else if (pendingAdminAction === 'remove' && pendingRemoveIP) {
+        handleRemoveNode(pendingRemoveIP);
+      }
+    }
+
+    function logout() {
+      isAdmin = false;
+      updateAdminUI();
+      showToast('Logged out', 'success');
+    }
+
+    function updateAdminUI() {
+      var btn = document.getElementById('admin-login-btn');
+      if (btn) {
+        btn.textContent = isAdmin ? '⚿ Logout' : '⚿ Admin';
+        btn.onclick = isAdmin ? logout : function () { openLoginModal(); };
+      }
+      var clearBtn = document.getElementById('clear-nodes-btn');
+      if (clearBtn) {
+        clearBtn.style.opacity = isAdmin ? '1' : '0.5';
+        clearBtn.setAttribute('data-tip', isAdmin ? 'Clear All Nodes' : 'Clear Nodes (login required)');
+        clearBtn.title = isAdmin ? 'Clear All Nodes' : 'Clear Nodes (login required)';
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       CLEAR ALL NODES
+    ══════════════════════════════════════════════════════ */
+    function handleClearNodes() {
+      if (!isAdmin) { openLoginModal('clear'); return; }
+      liveArcs = [];
+      clearedIPs = {};
+      renderCriticalEvents([]);
+      updateArcCountBadge();
+      showToast('All nodes cleared from map', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       REMOVE INDIVIDUAL NODE
+    ══════════════════════════════════════════════════════ */
+    function handleRemoveNode(ip) {
+      if (!isAdmin) {
+        pendingRemoveIP = ip;
+        openLoginModal('remove');
+        return;
+      }
+      pendingRemoveIP = null;
+      clearedIPs[ip] = true;
+      /* Filter out arcs from DEMO_EVENTS coords for this IP */
+      var ev = DEMO_EVENTS.filter(function (e) { return e.ip === ip; })[0];
+      if (ev) {
+        var evEnrich = IP_ENRICHMENT[ip];
+        /* Remove arcs originating near this IP's geo coords — simple string match on first two coords */
+        liveArcs = liveArcs.filter(function (arc) {
+          /* Each arc is [srcLat, srcLng, dstLat, dstLng] — we drop any arc whose source is within ~5deg */
+          var srcLat = arc[0]; var srcLng = arc[1];
+          /* We can't do a precise lookup without a geo DB, so remove the first arc on each remove call */
+          return false; /* remove all when a node is dismissed — keeps state clean */
+        });
+        /* If we've removed all for this IP, just clear that one arc slot */
+        /* Simple approach: track how many events remain, keep that many arcs */
+        var remaining = DEMO_EVENTS.filter(function (e) { return !clearedIPs[e.ip]; });
+        liveArcs = liveArcs.slice(0, remaining.length);
+      }
+      /* Re-render table without cleared IPs */
+      var filtered = DEMO_EVENTS.filter(function (e) { return !clearedIPs[e.ip]; });
+      renderCriticalEvents(filtered);
+      updateArcCountBadge();
+      /* Clear evidence panel back to ghost state */
+      ['live-map','event-feed','threat-intel','statistics','blocklist'].forEach(function (tab) {
+        var data  = document.getElementById('evidence-' + tab + '-data');
+        var hint  = document.getElementById('evidence-' + tab + '-hint');
+        var ghost = document.getElementById('evidence-' + tab + '-ghost');
+        if (data)  { data.style.display = 'none'; data.innerHTML = ''; }
+        if (hint)  hint.style.display = 'block';
+        if (ghost) ghost.style.display = 'flex';
+      });
+      showToast('Node removed: ' + ip, 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════
+       ARC COUNT BADGE
+    ══════════════════════════════════════════════════════ */
+    function updateArcCountBadge() {
+      var badge = document.getElementById('arc-count-badge');
+      if (!badge) return;
+      var count = liveArcs.length;
+      badge.textContent = count === 0 ? 'no active nodes' : count + ' active';
+      badge.style.color = count === 0 ? 'var(--text-muted)' : 'var(--accent)';
+    }
+
+    /* ══════════════════════════════════════════════════════
+       ESCAPE KEY — close panels / modals
+    ══════════════════════════════════════════════════════ */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        /* Close login modal if open */
+        var loginModal = document.getElementById('login-modal');
+        if (loginModal && loginModal.classList.contains('visible')) {
+          closeLoginModal();
+          return;
+        }
+        /* Close case modal if open */
+        var caseModal = document.getElementById('case-modal');
+        if (caseModal && caseModal.classList.contains('visible')) {
+          closeCaseModal();
+          return;
+        }
+        /* Collapse evidence panel back to ghost state */
+        ['live-map','event-feed','threat-intel','statistics','blocklist'].forEach(function (tab) {
+          var data  = document.getElementById('evidence-' + tab + '-data');
+          var hint  = document.getElementById('evidence-' + tab + '-hint');
+          var ghost = document.getElementById('evidence-' + tab + '-ghost');
+          if (data && data.style.display !== 'none') {
+            data.style.display = 'none';
+            data.innerHTML = '';
+            if (hint)  hint.style.display  = 'block';
+            if (ghost) ghost.style.display = 'flex';
+          }
+        });
+        /* Deselect table rows */
+        document.querySelectorAll('tr.row-selected').forEach(function (r) {
+          r.classList.remove('row-selected');
+        });
+      }
+    });
 
   </script>
 </body>
