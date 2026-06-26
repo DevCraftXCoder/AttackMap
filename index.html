@@ -3508,22 +3508,11 @@
       }
       pendingRemoveIP = null;
       clearedIPs[ip] = true;
-      /* Filter out arcs from DEMO_EVENTS coords for this IP */
-      var ev = DEMO_EVENTS.filter(function (e) { return e.ip === ip; })[0];
-      if (ev) {
-        var evEnrich = IP_ENRICHMENT[ip];
-        /* Remove arcs originating near this IP's geo coords — simple string match on first two coords */
-        liveArcs = liveArcs.filter(function (arc) {
-          /* Each arc is [srcLat, srcLng, dstLat, dstLng] — we drop any arc whose source is within ~5deg */
-          var srcLat = arc[0]; var srcLng = arc[1];
-          /* We can't do a precise lookup without a geo DB, so remove the first arc on each remove call */
-          return false; /* remove all when a node is dismissed — keeps state clean */
-        });
-        /* If we've removed all for this IP, just clear that one arc slot */
-        /* Simple approach: track how many events remain, keep that many arcs */
-        var remaining = DEMO_EVENTS.filter(function (e) { return !clearedIPs[e.ip]; });
-        liveArcs = liveArcs.slice(0, remaining.length);
-      }
+      /* Keep only as many arcs as there are remaining (un-cleared) events.
+         DEMO_EVENTS and the initial liveArcs array are positionally aligned,
+         so slicing to remaining.length preserves the correct subset of arcs. */
+      var remaining = DEMO_EVENTS.filter(function (e) { return !clearedIPs[e.ip]; });
+      liveArcs = liveArcs.slice(0, remaining.length);
       /* Re-render table without cleared IPs */
       var filtered = DEMO_EVENTS.filter(function (e) { return !clearedIPs[e.ip]; });
       renderCriticalEvents(filtered);
