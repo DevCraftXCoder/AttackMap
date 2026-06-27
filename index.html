@@ -1431,7 +1431,7 @@
           <button class="icon-btn" data-tip="Refresh" onclick="applyFilters()" title="Refresh">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
-          <button class="icon-btn" data-tip="Export" title="Export">
+          <button class="icon-btn" data-tip="Export" title="Export" onclick="CONFIG.BASE_URL ? apiFetch('/api/export/threats') : showToast('Connect a backend (CONFIG.BASE_URL) to export data', 'warn')">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
           </button>
           <button class="icon-btn" id="clear-nodes-btn" data-tip="Clear Nodes (login required)" title="Clear Nodes (login required)" onclick="handleClearNodes()" style="color:var(--sev-critical);opacity:0.5">
@@ -1614,10 +1614,10 @@
           <span class="pill" style="cursor:default;background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.3);color:var(--sev-high)">▲ Brute Force</span>
           <span class="pill" style="cursor:default;background:rgba(234,179,8,0.1);border-color:rgba(234,179,8,0.3);color:var(--sev-med)">◆ Rate Probe</span>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Pause stream">
+          <button class="icon-btn" data-tip="Pause stream" title="Pause/Resume stream" onclick="toggleStreamPause(this)">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M10 9v6m4-6v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </button>
-          <button class="icon-btn" data-tip="Export CSV">
+          <button class="icon-btn" data-tip="Export CSV" title="Export events as CSV" onclick="exportEventsCSV()">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
           </button>
         </div>
@@ -1742,7 +1742,7 @@
           <select class="filter-select"><option>All Time</option><option>Last 24h</option><option>Last 7d</option><option>Last 30d</option></select>
           <select class="filter-select"><option>All Regions</option><option>Asia Pacific</option><option>Europe</option><option>Americas</option></select>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Refresh intel">
+          <button class="icon-btn" data-tip="Refresh intel" title="Refresh threat intel" onclick="CONFIG.BASE_URL ? apiFetch('/api/intel/refresh').then(function(){showToast('Threat intel refreshed','success')}) : showToast('Connect a backend to refresh intel','warn')">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
         </div>
@@ -1865,7 +1865,7 @@
             <span class="pill" data-filter-group="stats-window" data-val="30d">30d</span>
           </div>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Export data">
+          <button class="icon-btn" data-tip="Export data" title="Export statistics" onclick="CONFIG.BASE_URL ? apiFetch('/api/stats/export').then(function(){showToast('Stats export started','success')}) : showToast('Connect a backend to export stats','warn')">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3"/></svg>
           </button>
         </div>
@@ -1974,7 +1974,7 @@
           <select class="filter-select"><option>IP Blocks</option><option>Country Blocks</option><option>All</option></select>
           <select class="filter-select"><option>Active Only</option><option>Expired</option><option>All</option></select>
           <div class="filter-spacer"></div>
-          <button class="icon-btn" data-tip="Refresh list">
+          <button class="icon-btn" data-tip="Refresh list" title="Refresh blocklist" onclick="CONFIG.BASE_URL ? apiFetch('/api/blocklist').then(function(){showToast('Blocklist refreshed','success')}) : showToast('Connect a backend to refresh blocklist','warn')">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
         </div>
@@ -2146,42 +2146,6 @@
                 </tr>
               </thead>
               <tbody id="rules-table-body">
-                <tr>
-                  <td style="color:var(--text-primary);font-weight:600">Brute Force Alert</td>
-                  <td><span class="sev-badge sev-high">● Threshold</span></td>
-                  <td class="mono">20 fail / 60s / IP</td>
-                  <td>Alert + Block</td>
-                  <td><span class="sev-badge sev-low">■ Active</span></td>
-                  <td class="mono">14</td>
-                  <td>
-                    <button class="btn btn-ghost btn-sm">Edit</button>
-                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text-primary);font-weight:600">Stuffing Detector</td>
-                  <td><span class="sev-badge sev-critical">▲ Pattern</span></td>
-                  <td class="mono">100 users / 300s / IP</td>
-                  <td>Alert</td>
-                  <td><span class="sev-badge sev-low">■ Active</span></td>
-                  <td class="mono">3</td>
-                  <td>
-                    <button class="btn btn-ghost btn-sm">Edit</button>
-                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text-primary);font-weight:600">High Anomaly</td>
-                  <td><span class="sev-badge sev-med">◆ Score</span></td>
-                  <td class="mono">score ≥ 80 / event</td>
-                  <td>Alert</td>
-                  <td><span class="sev-badge sev-low">■ Active</span></td>
-                  <td class="mono">31</td>
-                  <td>
-                    <button class="btn btn-ghost btn-sm">Edit</button>
-                    <button class="btn btn-danger btn-sm" style="margin-left:4px">Disable</button>
-                  </td>
-                </tr>
               </tbody>
             </table>
             <div id="rules-empty" class="empty-state" style="display:none">
@@ -2360,6 +2324,11 @@
       WARNING_ACTIVE: true
     };
 
+    /* XSS escaping helper — wrap all user/event data before innerHTML injection */
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
     /* ══════════════════════════════════════════════════════
        ADMIN AUTH STATE
     ══════════════════════════════════════════════════════ */
@@ -2464,6 +2433,7 @@
       initReplayCanvas();
       initReplayScrubber();
       renderCriticalEvents();
+      renderRules();
       renderBlocklist();
       renderHeatmap();
       renderEventTimelineChart();
@@ -2883,10 +2853,17 @@
       var scoreBarColor = stripColor;
       var scoreBarW = Math.min(100, sc);
 
-      var safeIp    = ip.replace(/'/g, "\\'");
-      var safeTs    = ts.replace(/'/g, "\\'");
-      var safeRoute = route.replace(/'/g, "\\'");
-      var safeCc    = cc.replace(/'/g, "\\'");
+      var safeIp    = escHtml(ip);
+      var safeTs    = escHtml(ts);
+      var safeRoute = escHtml(route);
+      var safeCc    = escHtml(cc);
+      var safeAsn   = escHtml(enrich.asn);
+      var safeAsnShort = escHtml(asnShort);
+      var safePattern  = escHtml(enrich.pattern);
+      var safeCountry  = escHtml(enrich.country);
+      var safeHits24h  = escHtml(String(enrich.hits24h));
+      var safeRelTs    = escHtml(relTs || ts);
+      var safeScore    = escHtml(String(score));
 
       var html =
         /* severity indicator strip */
@@ -2894,8 +2871,8 @@
         /* header: IP + severity badge + copy */
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">' +
           '<span class="sev-badge ' + sevCls + '" style="flex-shrink:0">' + sevGlyph(sc) + ' ' + sevLabel(sc) + '</span>' +
-          '<span class="evidence-val mono" style="flex:1;font-size:12px;color:var(--text-primary)">' + ip + '</span>' +
-          '<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" onclick="copyToClipboard(\'' + safeIp + '\')" title="Copy IP">⎘</button>' +
+          '<span class="evidence-val mono" style="flex:1;font-size:12px;color:var(--text-primary)">' + safeIp + '</span>' +
+          '<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" onclick="copyToClipboard(&#39;' + safeIp + '&#39;)" title="Copy IP">⎘</button>' +
         '</div>' +
         /* threat score bar */
         '<div style="margin-bottom:10px">' +
@@ -2907,18 +2884,18 @@
           '</div>' +
         '</div>' +
         /* fields */
-        '<div class="evidence-row"><span class="evidence-key">Country</span><span class="evidence-val">' + enrich.country + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">ASN</span><span class="evidence-val" title="' + enrich.asn + '">' + asnShort + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Pattern</span><span class="evidence-val">' + enrich.pattern + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Route</span><span class="evidence-val"><code style="background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px;font-size:10px">' + route + '</code></span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Hits (24h)</span><span class="evidence-val">' + enrich.hits24h + '</span></div>' +
-        '<div class="evidence-row"><span class="evidence-key">Seen</span><span class="evidence-val" title="' + ts + '">' + (relTs || ts) + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Country</span><span class="evidence-val">' + safeCountry + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">ASN</span><span class="evidence-val" title="' + safeAsn + '">' + safeAsnShort + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Pattern</span><span class="evidence-val">' + safePattern + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Route</span><span class="evidence-val"><code style="background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px;font-size:10px">' + safeRoute + '</code></span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Hits (24h)</span><span class="evidence-val">' + safeHits24h + '</span></div>' +
+        '<div class="evidence-row"><span class="evidence-key">Seen</span><span class="evidence-val" title="' + safeTs + '">' + safeRelTs + '</span></div>' +
         /* actions */
         '<div class="evidence-actions" style="margin-top:10px">' +
-          '<button class="btn btn-danger btn-sm" onclick="quickBlock(\'' + safeIp + '\')" title="Block this IP">Block IP</button>' +
-          '<button class="btn btn-ghost btn-sm" style="color:var(--sev-critical);border-color:rgba(239,68,68,0.25)" onclick="handleRemoveNode(\'' + safeIp + '\')" title="Remove node from map">✕ Remove</button>' +
-          '<button class="btn btn-case btn-sm" onclick="openCaseModalDirect(\'' + safeIp + '\',\'' + safeTs + '\',\'' + safeRoute + '\',\'' + score + '\',\'' + safeCc + '\')" title="Create incident case">Case +</button>' +
-          '<button class="btn btn-ghost btn-sm" onclick="copyToClipboard(\'' + safeIp + '\')" title="Copy IP to clipboard">⎘ Copy</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="quickBlock(&#39;' + safeIp + '&#39;)" title="Block this IP">Block IP</button>' +
+          '<button class="btn btn-ghost btn-sm" style="color:var(--sev-critical);border-color:rgba(239,68,68,0.25)" onclick="handleRemoveNode(&#39;' + safeIp + '&#39;)" title="Remove node from map">✕ Remove</button>' +
+          '<button class="btn btn-case btn-sm" onclick="openCaseModalDirect(&#39;' + safeIp + '&#39;,&#39;' + safeTs + '&#39;,&#39;' + safeRoute + '&#39;,&#39;' + safeScore + '&#39;,&#39;' + safeCc + '&#39;)" title="Create incident case">Case +</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="copyToClipboard(&#39;' + safeIp + '&#39;)" title="Copy IP to clipboard">⎘ Copy</button>' +
         '</div>';
 
       /* Update all evidence panels */
@@ -3011,6 +2988,86 @@
       stuffing:{ name:'Credential Stuffing',   count:100, window:300, cooldown:600, action:'Alert Only'       },
       anomaly: { name:'High Anomaly Score',    count:1,   window:0,   cooldown:60,  action:'Alert Only'       }
     };
+
+    // ── Rules model ──────────────────────────────────────────────────────────
+    var RULES = [
+      { id: 1, name: 'Brute Force Alert',   type: 'Threshold', trigger: '20 fail / 60s / IP',    action: 'Alert + Block', status: 'active',   fires: 14 },
+      { id: 2, name: 'Stuffing Detector',   type: 'Pattern',   trigger: '100 users / 300s / IP', action: 'Alert',         status: 'active',   fires: 3  },
+      { id: 3, name: 'High Anomaly',        type: 'Score',     trigger: 'score ≥ 80 / event',    action: 'Alert',         status: 'active',   fires: 31 }
+    ];
+
+    function renderRules() {
+      var tbody = document.getElementById('rules-table-body');
+      if (!tbody) return;
+      if (!RULES.length) {
+        tbody.innerHTML = '';
+        var empty = document.getElementById('rules-empty');
+        if (empty) empty.style.display = '';
+        return;
+      }
+      var badgeClass = { Threshold: 'sev-high', Pattern: 'sev-critical', Score: 'sev-med' };
+      var badgeGlyph = { Threshold: '●', Pattern: '▲', Score: '◆' };
+      tbody.innerHTML = RULES.map(function(r) {
+        var bc = badgeClass[r.type] || 'sev-none';
+        var bg = badgeGlyph[r.type] || '■';
+        var statusBadge = r.status === 'active'
+          ? '<span class="sev-badge sev-low">■ Active</span>'
+          : '<span class="sev-badge" style="background:rgba(124,143,166,0.1);color:var(--text-muted)">■ Disabled</span>';
+        return '<tr>' +
+          '<td style="color:var(--text-primary);font-weight:600">' + escHtml(r.name) + '</td>' +
+          '<td><span class="sev-badge ' + bc + '">' + bg + ' ' + escHtml(r.type) + '</span></td>' +
+          '<td class="mono">' + escHtml(r.trigger) + '</td>' +
+          '<td>' + escHtml(r.action) + '</td>' +
+          '<td>' + statusBadge + '</td>' +
+          '<td class="mono">' + r.fires + '</td>' +
+          '<td>' +
+            '<button class="btn btn-ghost btn-sm" onclick="editRule(' + r.id + ')">Edit</button>' +
+            '<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="toggleRule(' + r.id + ')">' + (r.status === 'active' ? 'Disable' : 'Enable') + '</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function editRule(id) {
+      var r = RULES.filter(function(x){ return x.id === id; })[0];
+      if (!r) return;
+      var nameEl = document.getElementById('rule-name');
+      if (nameEl) { nameEl.value = r.name; nameEl.scrollIntoView({ behavior: 'smooth' }); }
+      showToast('Editing rule: ' + r.name, 'warn');
+    }
+
+    function toggleRule(id) {
+      var r = RULES.filter(function(x){ return x.id === id; })[0];
+      if (!r) return;
+      r.status = r.status === 'active' ? 'disabled' : 'active';
+      renderRules();
+      showToast('Rule ' + (r.status === 'active' ? 'enabled' : 'disabled') + ': ' + escHtml(r.name), 'success');
+    }
+
+    // ── Stream pause / CSV export ─────────────────────────────────────────────
+    var streamPaused = false;
+    function toggleStreamPause(btn) {
+      streamPaused = !streamPaused;
+      if (btn) btn.style.color = streamPaused ? 'var(--sev-med)' : '';
+      showToast(streamPaused ? 'Stream paused' : 'Stream resumed', streamPaused ? 'warn' : 'success');
+    }
+
+    function exportEventsCSV() {
+      var events = typeof DEMO_EVENTS !== 'undefined' ? DEMO_EVENTS : [];
+      if (!events.length) { showToast('No events to export', 'warn'); return; }
+      var header = 'timestamp,ip,country,route,reason,score';
+      var rows = events.map(function(e) {
+        return [e.ts || '', e.ip || '', e.cc || '', e.route || '', e.reason || '', e.score || ''].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+      });
+      var csv = [header].concat(rows).join('\n');
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'attackmap-events-' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('CSV exported (' + events.length + ' events)', 'success');
+    }
 
     function applyTemplate(tpl) {
       var t = TEMPLATES[tpl];
@@ -3298,7 +3355,7 @@
       currentCaseData = { ip:ip, timestamp:ts, route:route, severity:sevLabel(parseInt(score,10)), country:cc, score:score, caseId:'CASE-' + Date.now() };
       var fields = document.getElementById('case-modal-fields');
       fields.innerHTML = Object.keys(currentCaseData).map(function (k) {
-        return '<div class="modal-field"><span class="modal-field-key">' + k + '</span><span class="modal-field-val">' + currentCaseData[k] + '</span></div>';
+        return '<div class="modal-field"><span class="modal-field-key">' + escHtml(k) + '</span><span class="modal-field-val">' + escHtml(String(currentCaseData[k])) + '</span></div>';
       }).join('');
       document.getElementById('case-modal').classList.add('visible');
     }
@@ -3413,14 +3470,31 @@
     /* ══════════════════════════════════════════════════════
        API FETCH
     ══════════════════════════════════════════════════════ */
-    function apiFetch(path) {
+    function apiFetch(path, opts) {
       if (!CONFIG.BASE_URL) return Promise.resolve(null);
-      return fetch(CONFIG.BASE_URL + path, {
-        headers: { 'Authorization': 'Bearer ' + CONFIG.ADMIN_KEY }
-      }).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).catch(function () { return null; });
+      try {
+        return fetch(CONFIG.BASE_URL + path, Object.assign({
+          headers: { 'Authorization': 'Bearer ' + CONFIG.ADMIN_KEY, 'Content-Type': 'application/json' }
+        }, opts)).then(function (res) {
+          if (res.status === 401 || res.status === 403) {
+            showToast('Session expired or unauthorized — please re-authenticate', 'error');
+            isAdmin = false;
+            updateAdminUI();
+            return null;
+          }
+          if (!res.ok) {
+            showToast('Request failed: ' + res.status, 'error');
+            return null;
+          }
+          return res.json();
+        }).catch(function (e) {
+          showToast('Network error: ' + (e && e.message ? e.message : 'unknown'), 'error');
+          return null;
+        });
+      } catch (e) {
+        showToast('Network error: ' + (e && e.message ? e.message : 'unknown'), 'error');
+        return Promise.resolve(null);
+      }
     }
 
     /* ══════════════════════════════════════════════════════
